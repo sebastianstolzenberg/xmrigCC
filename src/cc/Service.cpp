@@ -134,7 +134,7 @@ unsigned Service::getClientConfig(const Options* options, const std::string& cli
         document.Parse(data.str().c_str());
 
         if (!document.HasParseError()) {
-            rapidjson::StringBuffer buffer(0, 65536);
+            rapidjson::StringBuffer buffer(0, 4096);
             rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
             writer.SetMaxDecimalPlaces(10);
             document.Accept(writer);

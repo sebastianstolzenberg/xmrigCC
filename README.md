@@ -20,7 +20,7 @@ Full Windows/Linux compatible, and you can mix Linux and Windows miner on one XM
 
 **XMRigCC Dashboard**
 
-![Screenshot of XMRigCC Dashboard](https://i.imgur.com/D2y4V0V.png)
+![Screenshot of XMRigCC Dashboard](https://i.imgur.com/VwJaf26.png)
 
 
 **[Find HELP/HOWTO](https://github.com/Bendr0id/xmrigCC/wiki/)**
@@ -216,6 +216,7 @@ BTC:  `1P7ujsXeX7GxQwHNnJsRMgAdNkFZmNVqJT`
 
 ## Contacts xmrigCC
 * ben [at] graef.in
+* Telegram: @BenDr0id
 * [reddit](https://www.reddit.com/user/BenDr0id/)
 
 ## Contacts xmrig
