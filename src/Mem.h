@@ -47,6 +47,7 @@ public:
     static cryptonight_ctx *create(int threadId);
     static void release();
 
+    static inline int maxHashFactor()         { return m_hashFactor; }
     static inline int hashFactor(int threadId) { return (m_doubleHashThreadMask == -1L || ((m_doubleHashThreadMask >> threadId) & 1)) ? m_hashFactor : 1; }
     static inline bool isHugepagesAvailable() { return (m_flags & HugepagesAvailable) != 0; }
     static inline bool isHugepagesEnabled()   { return (m_flags & HugepagesEnabled) != 0; }

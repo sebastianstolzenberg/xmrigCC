@@ -28,6 +28,7 @@
 #include "crypto/CryptoNight.h"
 #include "workers/MultiWorker.h"
 #include "workers/Workers.h"
+#include "Mem.h"
 
 
 template <size_t FACTOR>
@@ -158,10 +159,10 @@ void MultiWorker<FACTOR>::consumeJob()
         memcpy(m_state->blob + i * m_state->job.size(), m_state->job.blob(), m_state->job.size());
         if (m_state->job.isNicehash()) {
             m_state->nonces[i] = (*Job::nonce(m_state->blob + m_state->job.size()) & 0xff000000U) +
-                                 (0xffffffU / (m_threads * FACTOR) * (m_id + i * m_threads));
+                                 (0xffffffU / (m_threads * Mem::maxHashFactor()) * (m_id + i * m_threads));
         }
         else {
-            m_state->nonces[i] = std::numeric_limits<uint32_t>::max() / (m_threads * FACTOR) *
+            m_state->nonces[i] = std::numeric_limits<uint32_t>::max() / (m_threads * Mem::maxHashFactor()) *
                                  (m_id + i * m_threads);
         }
     }
