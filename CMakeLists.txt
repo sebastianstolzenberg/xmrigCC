@@ -2,13 +2,13 @@ cmake_minimum_required(VERSION 2.8)
 project(xmrig)
 
 #set(CMAKE_BUILD_TYPE Debug)
-set(CMAKE_BUILD_TYPE Release)
+#set(CMAKE_BUILD_TYPE Release)
 
 option(WITH_LIBCPUID  "Use Libcpuid" ON)
 option(WITH_AEON      "CryptoNight-Lite support" ON)
 option(WITH_HTTPD     "HTTP REST API" OFF)
-option(WITH_CC_CLIENT "CC Client" ON)
-option(WITH_CC_SERVER "CC Server" ON)
+option(WITH_CC_CLIENT "CC Client" OFF)
+option(WITH_CC_SERVER "CC Server" OFF)
 
 include (CheckIncludeFile)
 include (cmake/cpu.cmake)
@@ -37,6 +37,7 @@ set(HEADERS
     src/net/SubmitResult.h
     src/version.h
     src/workers/DoubleWorker.h
+    src/workers/MultiWorker.h
     src/workers/Handle.h
     src/workers/Hashrate.h
     src/workers/SingleWorker.h
@@ -78,6 +79,7 @@ set(SOURCES
     src/net/SubmitResult.cpp
     src/Summary.cpp
     src/workers/DoubleWorker.cpp
+    src/workers/MultiWorker.cpp
     src/workers/Handle.cpp
     src/workers/Hashrate.cpp
     src/workers/SingleWorker.cpp

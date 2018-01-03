@@ -21,45 +21,19 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __CRYPTONIGHT_H__
-#define __CRYPTONIGHT_H__
-
-
-#include <cstddef>
-#include <cstdint>
+#ifndef __MULTIWORKER_H__
+#define __MULTIWORKER_H__
 
 
 #include "align.h"
+#include "net/Job.h"
+#include "net/JobResult.h"
+#include "workers/Worker.h"
 
 
-#define MEMORY      2097152 /* 2 MiB */
-#define MEMORY_LITE 1048576 /* 1 MiB */
+class Handle;
+
+Worker* createMultiWorker(size_t numHashes, Handle *handle);
 
 
-struct cryptonight_ctx {
-    VAR_ALIGN(16, uint8_t state0[200]);
-    VAR_ALIGN(16, uint8_t state1[200]);
-    VAR_ALIGN(16, uint8_t state2[200]);
-    VAR_ALIGN(16, uint8_t state3[200]);
-    VAR_ALIGN(16, uint8_t* memory);
-};
-
-
-class Job;
-class JobResult;
-
-
-class CryptoNight
-{
-public:
-    static void hash(const uint8_t* input, size_t size, uint8_t* output, cryptonight_ctx* ctx);
-    static bool init(int algo, int variant);
-    static void hashDouble(const uint8_t* input, size_t size, uint8_t* output, cryptonight_ctx* ctx);
-    static void hashTriple(const uint8_t* input, size_t size, uint8_t* output, cryptonight_ctx* ctx);
-    static void hashQuad(const uint8_t* input, size_t size, uint8_t* output, cryptonight_ctx* ctx);
-
-private:
-    static bool selfTest(int algo);
-};
-
-#endif /* __CRYPTONIGHT_H__ */
+#endif /* __SINGLEWORKER_H__ */

@@ -23,8 +23,8 @@
 
 
 #include <libcpuid.h>
-#include <math.h>
-#include <string.h>
+#include <cmath>
+#include <cstring>
 
 #include "Cpu.h"
 
@@ -39,7 +39,7 @@ int Cpu::m_totalCores    = 0;
 int Cpu::m_totalThreads  = 0;
 
 
-int Cpu::optimalThreadsCount(int algo, bool doubleHash, int maxCpuUsage)
+int Cpu::optimalThreadsCount(int algo, int hashFactor, int maxCpuUsage)
 {
     if (m_totalThreads == 1) {
         return 1;
@@ -54,7 +54,7 @@ int Cpu::optimalThreadsCount(int algo, bool doubleHash, int maxCpuUsage)
     }
 
     int count = 0;
-    const int size = (algo ? 1024 : 2048) * (doubleHash ? 2 : 1);
+    const int size = (algo ? 1024 : 2048) * hashFactor;
 
     if (cache) {
         count = cache / size;

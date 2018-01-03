@@ -23,7 +23,7 @@
  */
 
 
-#include <string.h>
+#include <cstring>
 #include <uv.h>
 
 
@@ -160,7 +160,7 @@ static struct option const options[] = {
     { "cc-custom-dashboard",        1, nullptr, 4010 },
     { "daemonized",       0, nullptr, 4011 },
     { "doublehash-thread-mask",     1, nullptr, 4013 },
-    { 0, 0, 0, 0 }
+    { nullptr, 0, nullptr, 0 }
 };
 
 
@@ -183,7 +183,7 @@ static struct option const config_options[] = {
     { "threads",       1, nullptr, 't'  },
     { "user-agent",    1, nullptr, 1008 },
     { "doublehash-thread-mask",     1, nullptr, 4013 },
-    { 0, 0, 0, 0 }
+    { nullptr, 0, nullptr, 0 }
 };
 
 
@@ -194,7 +194,7 @@ static struct option const pool_options[] = {
     { "userpass",      1, nullptr, 'O'  },
     { "keepalive",     0, nullptr ,'k'  },
     { "nicehash",      0, nullptr, 1006 },
-    { 0, 0, 0, 0 }
+    { nullptr, 0, nullptr, 0 }
 };
 
 
@@ -202,7 +202,7 @@ static struct option const api_options[] = {
     { "port",          1, nullptr, 4000 },
     { "access-token",  1, nullptr, 4001 },
     { "worker-id",     1, nullptr, 4002 },
-    { 0, 0, 0, 0 }
+    { nullptr, 0, nullptr, 0 }
 };
 
 
@@ -211,7 +211,7 @@ static struct option const cc_client_options[] = {
     { "access-token",           1, nullptr, 4004 },
     { "worker-id",              1, nullptr, 4005 },
     { "update-interval-s",      1, nullptr, 4012 },
-    { 0, 0, 0, 0 }
+    { nullptr, 0, nullptr, 0 }
 };
 
 static struct option const cc_server_options[] = {
@@ -221,7 +221,7 @@ static struct option const cc_server_options[] = {
     { "pass",                   1, nullptr, 4008 },
     { "client-config-folder",   1, nullptr, 4009 },
     { "custom-dashboard",       1, nullptr, 4010 },
-    { 0, 0, 0, 0 }
+    { nullptr, 0, nullptr, 0 }
 };
 
 static const char *algo_names[] = {
@@ -234,7 +234,7 @@ static const char *algo_names[] = {
 
 Options *Options::parse(int argc, char **argv)
 {
-    Options *options = new Options(argc, argv);
+    auto options = new Options(argc, argv);
     if (options->isReady()) {
         m_self = options;
         return m_self;
@@ -254,7 +254,6 @@ const char *Options::algoName() const
 Options::Options(int argc, char **argv) :
     m_background(false),
     m_colors(true),
-    m_doubleHash(false),
     m_hugePages(true),
     m_ready(false),
     m_safe(false),
@@ -274,6 +273,7 @@ Options::Options(int argc, char **argv) :
     m_ccCustomDashboard(nullptr),
     m_algo(0),
     m_algoVariant(0),
+    m_hashFactor(1),
     m_apiPort(0),
     m_donateLevel(kDonateLevel),
     m_maxCpuUsage(75),
@@ -291,8 +291,8 @@ Options::Options(int argc, char **argv) :
 
     int key;
 
-    while (1) {
-        key = getopt_long(argc, argv, short_options, options, NULL);
+    while (true) {
+        key = getopt_long(argc, argv, short_options, options, nullptr);
         if (key < 0) {
             break;
         }
@@ -334,16 +334,22 @@ Options::Options(int argc, char **argv) :
     }
 
     m_algoVariant = getAlgoVariant();
-    if (m_algoVariant == AV2_AESNI_DOUBLE || m_algoVariant == AV4_SOFT_AES_DOUBLE) {
-        m_doubleHash = true;
+    if (m_algoVariant == AV2_AESNI_DOUBLE || m_algoVariant == AV6_SOFT_AES_DOUBLE) {
+        m_hashFactor = 2;
+    }
+    else if (m_algoVariant == AV3_AESNI_TRIPLE || m_algoVariant == AV7_SOFT_AES_TRIPLE) {
+        m_hashFactor = 3;
+    }
+    else if (m_algoVariant == AV4_AESNI_QUAD || m_algoVariant == AV8_SOFT_AES_QUAD) {
+        m_hashFactor = 4;
     }
 #endif
 
     if (!m_threads) {
-        m_threads = Cpu::optimalThreadsCount(m_algo, m_doubleHash, m_maxCpuUsage);
+        m_threads = Cpu::optimalThreadsCount(m_algo, m_hashFactor, m_maxCpuUsage);
     }
     else if (m_safe) {
-        const int count = Cpu::optimalThreadsCount(m_algo, m_doubleHash, m_maxCpuUsage);
+        const int count = Cpu::optimalThreadsCount(m_algo, m_hashFactor, m_maxCpuUsage);
         if (m_threads > count) {
             m_threads = count;
         }
@@ -402,7 +408,7 @@ bool Options::parseArg(int key, const char *arg)
 
     case 'o': /* --url */
         if (m_pools.size() > 1 || m_pools[0]->isValid()) {
-            Url *url = new Url(arg);
+            auto url = new Url(arg);
             if (url->isValid()) {
                 m_pools.push_back(url);
             }
@@ -732,8 +738,8 @@ void Options::parseConfig(const char *fileName)
         return;
     }
 
-    for (size_t i = 0; i < ARRAY_SIZE(config_options); i++) {
-        parseJSON(&config_options[i], doc);
+    for (auto option : config_options) {
+        parseJSON(&option, doc);
     }
 
     const rapidjson::Value &pools = doc["pools"];
@@ -743,30 +749,30 @@ void Options::parseConfig(const char *fileName)
                 continue;
             }
 
-            for (size_t i = 0; i < ARRAY_SIZE(pool_options); i++) {
-                parseJSON(&pool_options[i], value);
+            for (auto option : pool_options) {
+                parseJSON(&option, value);
             }
         }
     }
 
     const rapidjson::Value &api = doc["api"];
     if (api.IsObject()) {
-        for (size_t i = 0; i < ARRAY_SIZE(api_options); i++) {
-            parseJSON(&api_options[i], api);
+        for (auto api_option : api_options) {
+            parseJSON(&api_option, api);
         }
     }
 
     const rapidjson::Value &ccClient = doc["cc-client"];
     if (ccClient.IsObject()) {
-        for (size_t i = 0; i < ARRAY_SIZE(cc_client_options); i++) {
-            parseJSON(&cc_client_options[i], ccClient);
+        for (auto cc_client_option : cc_client_options) {
+            parseJSON(&cc_client_option, ccClient);
         }
     }
 
     const rapidjson::Value &ccServer = doc["cc-server"];
     if (ccServer.IsObject()) {
-        for (size_t i = 0; i < ARRAY_SIZE(cc_server_options); i++) {
-            parseJSON(&cc_server_options[i], ccServer);
+        for (auto cc_server_option : cc_server_options) {
+            parseJSON(&cc_server_option, ccServer);
         }
     }
 }
@@ -869,11 +875,11 @@ int Options::getAlgoVariant() const
 #   endif
 
     if (m_algoVariant <= AV0_AUTO || m_algoVariant >= AV_MAX) {
-        return Cpu::hasAES() ? AV1_AESNI : AV3_SOFT_AES;
+        return Cpu::hasAES() ? AV1_AESNI : AV5_SOFT_AES;
     }
 
     if (m_safe && !Cpu::hasAES() && m_algoVariant <= AV2_AESNI_DOUBLE) {
-        return m_algoVariant + 2;
+        return m_algoVariant + 4;
     }
 
     return m_algoVariant;
@@ -884,11 +890,11 @@ int Options::getAlgoVariant() const
 int Options::getAlgoVariantLite() const
 {
     if (m_algoVariant <= AV0_AUTO || m_algoVariant >= AV_MAX) {
-        return Cpu::hasAES() ? AV2_AESNI_DOUBLE : AV4_SOFT_AES_DOUBLE;
+        return Cpu::hasAES() ? AV2_AESNI_DOUBLE : AV6_SOFT_AES_DOUBLE;
     }
 
     if (m_safe && !Cpu::hasAES() && m_algoVariant <= AV2_AESNI_DOUBLE) {
-        return m_algoVariant + 2;
+        return m_algoVariant + 4;
     }
 
     return m_algoVariant;

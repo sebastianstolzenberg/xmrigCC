@@ -23,8 +23,7 @@
 
 
 #include <string>
-#include <inttypes.h>
-#include <stdio.h>
+#include <cinttypes>
 #include <uv.h>
 
 
@@ -32,7 +31,6 @@
 #include "log/Log.h"
 #include "Mem.h"
 #include "net/Url.h"
-#include "Options.h"
 #include "Summary.h"
 #include "version.h"
 
@@ -92,29 +90,40 @@ static void print_cpu()
 static void print_threads()
 {
     char dhtMaskBuf[256];
-    if (Options::i()->doubleHash() && Options::i()->doubleHashThreadMask() != -1L) {
+    if (Options::i()->hashFactor() > 1 && Options::i()->doubleHashThreadMask() != -1L) {
 
         std::string singleThreads;
         std::string doubleThreads;
+        std::string tripleThreads;
+        std::string quadThreads;
+
+        auto addThread = [](std::string& threads, int id) {
+            if (threads.empty()) {
+                threads.append(", ");
+            }
+            threads.append(std::to_string(id));
+        };
 
         for (int i=0; i < Options::i()->threads(); i++) {
-            if (Mem::isDoubleHash(i)) {
-                if (!doubleThreads.empty()) {
-                    doubleThreads.append(", ");
-                }
-
-                doubleThreads.append(std::to_string(i));
-            } else {
-                if (!singleThreads.empty()) {
-                    singleThreads.append(" ");
-                }
-
-                singleThreads.append(std::to_string(i));
+            switch (Mem::hashFactor(i)) {
+                case 2:
+                    addThread(doubleThreads, i);
+                    break;
+                case 3:
+                    addThread(tripleThreads, i);
+                    break;
+                case 4:
+                    addThread(quadThreads, i);
+                    break;
+                case 1:
+                default:
+                    addThread(singleThreads, i);
+                    break;
             }
         }
 
-        snprintf(dhtMaskBuf, 256, ", doubleHashThreadMask=0x%" PRIX64 " [single threads: %s; double threads: %s]",
-                 Options::i()->doubleHashThreadMask(), singleThreads.c_str(), doubleThreads.c_str());
+        snprintf(dhtMaskBuf, 256, ", doubleHashThreadMask=0x%" PRIX64 " [single threads: %s; double threads: %s; triple threads: %s; quad threads: %s]",
+                 Options::i()->doubleHashThreadMask(), singleThreads.c_str(), doubleThreads.c_str(), tripleThreads.c_str(), quadThreads.c_str());
     }
     else {
         dhtMaskBuf[0] = '\0';

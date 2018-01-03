@@ -25,8 +25,8 @@
 #define __MEM_H__
 
 
-#include <stddef.h>
-#include <stdint.h>
+#include <cstddef>
+#include <cstdint>
 
 #include "align.h"
 #include "Options.h"
@@ -47,14 +47,14 @@ public:
     static cryptonight_ctx *create(int threadId);
     static void release();
 
-    static inline bool isDoubleHash(int threadId) { return m_doubleHash && (m_doubleHashThreadMask == -1L || ((m_doubleHashThreadMask >> threadId) & 1)); }
+    static inline int hashFactor(int threadId) { return (m_doubleHashThreadMask == -1L || ((m_doubleHashThreadMask >> threadId) & 1)) ? m_hashFactor : 1; }
     static inline bool isHugepagesAvailable() { return (m_flags & HugepagesAvailable) != 0; }
     static inline bool isHugepagesEnabled()   { return (m_flags & HugepagesEnabled) != 0; }
     static inline int flags()                 { return m_flags; }
     static inline int threads()               { return m_threads; }
 
 private:
-    static bool m_doubleHash;
+    static int m_hashFactor;
     static int m_algo;
     static int m_flags;
     static int m_threads;

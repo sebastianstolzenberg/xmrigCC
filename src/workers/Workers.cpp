@@ -30,8 +30,7 @@
 #include "api/Api.h"
 #include "interfaces/IJobResultListener.h"
 #include "Mem.h"
-#include "Options.h"
-#include "workers/DoubleWorker.h"
+#include "workers/MultiWorker.h"
 #include "workers/Handle.h"
 #include "workers/Hashrate.h"
 #include "workers/SingleWorker.h"
@@ -118,7 +117,7 @@ void Workers::start(int64_t affinity, int priority)
     uv_timer_start(&m_timer, Workers::onTick, 500, 500);
 
     for (int i = 0; i < threads; ++i) {
-        Handle *handle = new Handle(i, threads, affinity, priority);
+        auto handle = new Handle(i, threads, affinity, priority);
         m_workers.push_back(handle);
         handle->start(Workers::onReady);
     }
@@ -134,8 +133,8 @@ void Workers::stop()
     m_paused   = 0;
     m_sequence = 0;
 
-    for (size_t i = 0; i < m_workers.size(); ++i) {
-        m_workers[i]->join();
+    for (auto worker : m_workers) {
+        worker->join();
     }
 }
 
@@ -153,8 +152,8 @@ void Workers::submit(const JobResult &result, int threadId)
 void Workers::onReady(void *arg)
 {
     auto handle = static_cast<Handle*>(arg);
-    if (Mem::isDoubleHash(handle->threadId())) {
-        handle->setWorker(new DoubleWorker(handle));
+    if (Mem::hashFactor(handle->threadId()) > 1) {
+        handle->setWorker(createMultiWorker(Mem::hashFactor(handle->threadId()), handle));
     }
     else {
         handle->setWorker(new SingleWorker(handle));
@@ -185,12 +184,12 @@ void Workers::onResult(uv_async_t *handle)
 
 void Workers::onTick(uv_timer_t *handle)
 {
-    for (Handle *handle : m_workers) {
-        if (!handle->worker()) {
+    for (auto workerHandle : m_workers) {
+        if (!workerHandle->worker()) {
             return;
         }
 
-        m_hashrate->add(handle->threadId(), handle->worker()->hashCount(), handle->worker()->timestamp());
+        m_hashrate->add(workerHandle->threadId(), workerHandle->worker()->hashCount(), workerHandle->worker()->timestamp());
     }
 
     if ((m_ticks++ & 0xF) == 0)  {

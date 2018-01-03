@@ -31,13 +31,13 @@
 #endif
 
 #include "crypto/CryptoNight_test.h"
-#include "net/Job.h"
-#include "net/JobResult.h"
 #include "Options.h"
 
 
 void (*cryptonight_hash_ctx_s)(const void *input, size_t size, void *output, cryptonight_ctx *ctx) = nullptr;
 void (*cryptonight_hash_ctx_d)(const void *input, size_t size, void *output, cryptonight_ctx *ctx) = nullptr;
+void (*cryptonight_hash_ctx_t)(const void *input, size_t size, void *output, cryptonight_ctx *ctx) = nullptr;
+void (*cryptonight_hash_ctx_q)(const void *input, size_t size, void *output, cryptonight_ctx *ctx) = nullptr;
 
 
 static void cryptonight_av1_aesni(const void *input, size_t size, void *output, struct cryptonight_ctx *ctx) {
@@ -53,16 +53,36 @@ static void cryptonight_av2_aesni_double(const void *input, size_t size, void *o
 #   endif
 }
 
+static void cryptonight_av3_aesni_triple(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
+#   if !defined(XMRIG_ARMv7)
+    cryptonight_triple_hash<0x80000, MEMORY, 0x1FFFF0, false>(input, size, output, ctx);
+#   endif
+}
 
-static void cryptonight_av3_softaes(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
+static void cryptonight_av4_aesni_quad(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
+#   if !defined(XMRIG_ARMv7)
+    cryptonight_quad_hash<0x80000, MEMORY, 0x1FFFF0, false>(input, size, output, ctx);
+#   endif
+}
+
+static void cryptonight_av5_softaes(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
     cryptonight_hash<0x80000, MEMORY, 0x1FFFF0, true>(input, size, output, ctx);
 }
 
 
-static void cryptonight_av4_softaes_double(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
+static void cryptonight_av6_softaes_double(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
     cryptonight_double_hash<0x80000, MEMORY, 0x1FFFF0, true>(input, size, output, ctx);
 }
 
+
+static void cryptonight_av7_softaes_triple(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
+    cryptonight_triple_hash<0x80000, MEMORY, 0x1FFFF0, true>(input, size, output, ctx);
+}
+
+
+static void cryptonight_av8_softaes_quad(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
+    cryptonight_quad_hash<0x80000, MEMORY, 0x1FFFF0, true>(input, size, output, ctx);
+}
 
 static void cryptonight_lite_av1_aesni(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
 #   if !defined(XMRIG_ARMv7)
@@ -77,25 +97,53 @@ static void cryptonight_lite_av2_aesni_double(const void *input, size_t size, vo
 #   endif
 }
 
+static void cryptonight_lite_av3_aesni_triple(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
+#   if !defined(XMRIG_ARMv7)
+    cryptonight_triple_hash<0x40000, MEMORY_LITE, 0xFFFF0, false>(input, size, output, ctx);
+#   endif
+}
 
-static void cryptonight_lite_av3_softaes(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
+static void cryptonight_lite_av4_aesni_quad(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
+#   if !defined(XMRIG_ARMv7)
+    cryptonight_quad_hash<0x40000, MEMORY_LITE, 0xFFFF0, false>(input, size, output, ctx);
+#   endif
+}
+
+
+static void cryptonight_lite_av5_softaes(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
     cryptonight_hash<0x40000, MEMORY_LITE, 0xFFFF0, true>(input, size, output, ctx);
 }
 
-
-static void cryptonight_lite_av4_softaes_double(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
+static void cryptonight_lite_av6_softaes_double(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
     cryptonight_double_hash<0x40000, MEMORY_LITE, 0xFFFF0, true>(input, size, output, ctx);
 }
 
-void (*cryptonight_variations[8])(const void *input, size_t size, void *output, cryptonight_ctx *ctx) = {
+static void cryptonight_lite_av7_softaes_triple(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
+    cryptonight_triple_hash<0x40000, MEMORY_LITE, 0xFFFF0, true>(input, size, output, ctx);
+}
+
+static void cryptonight_lite_av8_softaes_quad(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
+    cryptonight_quad_hash<0x40000, MEMORY_LITE, 0xFFFF0, true>(input, size, output, ctx);
+}
+
+
+void (*cryptonight_variations[16])(const void *input, size_t size, void *output, cryptonight_ctx *ctx) = {
             cryptonight_av1_aesni,
             cryptonight_av2_aesni_double,
-            cryptonight_av3_softaes,
-            cryptonight_av4_softaes_double,
+            cryptonight_av3_aesni_triple,
+            cryptonight_av4_aesni_quad,
+            cryptonight_av5_softaes,
+            cryptonight_av6_softaes_double,
+            cryptonight_av7_softaes_triple,
+            cryptonight_av8_softaes_quad,
             cryptonight_lite_av1_aesni,
             cryptonight_lite_av2_aesni_double,
-            cryptonight_lite_av3_softaes,
-            cryptonight_lite_av4_softaes_double
+            cryptonight_lite_av3_aesni_triple,
+            cryptonight_lite_av4_aesni_quad,
+            cryptonight_lite_av5_softaes,
+            cryptonight_lite_av6_softaes_double,
+            cryptonight_lite_av7_softaes_triple,
+            cryptonight_lite_av8_softaes_quad
 };
 
 
@@ -109,9 +157,19 @@ void CryptoNight::hashDouble(const uint8_t* input, size_t size, uint8_t* output,
     cryptonight_hash_ctx_d(input, size, output, ctx);
 }
 
+void CryptoNight::hashTriple(const uint8_t* input, size_t size, uint8_t* output, cryptonight_ctx* ctx)
+{
+    cryptonight_hash_ctx_t(input, size, output, ctx);
+}
+
+void CryptoNight::hashQuad(const uint8_t* input, size_t size, uint8_t* output, cryptonight_ctx* ctx)
+{
+    cryptonight_hash_ctx_q(input, size, output, ctx);
+}
+
 bool CryptoNight::init(int algo, int variant)
 {
-    if (variant < 1 || variant  > 4)
+    if (variant < 1 || variant  > 8)
     {
         return false;
     }
@@ -119,41 +177,48 @@ bool CryptoNight::init(int algo, int variant)
     int index = 0;
 
     if (algo == Options::ALGO_CRYPTONIGHT_LITE) {
-        index += 4;
+        index += 8;
     }
 
-    if (variant == 3 || variant == 4)
+    if (variant >= 5 && variant <= 8)
     {
-        index += 2;
+        index += 4;
     }
 
     cryptonight_hash_ctx_s = cryptonight_variations[index];
     cryptonight_hash_ctx_d = cryptonight_variations[index+1];
+    cryptonight_hash_ctx_t = cryptonight_variations[index+2];
+    cryptonight_hash_ctx_q = cryptonight_variations[index+3];
 
     return selfTest(algo);
 }
 
 bool CryptoNight::selfTest(int algo)
 {
-    if (cryptonight_hash_ctx_s == nullptr || cryptonight_hash_ctx_d == nullptr) {
+    if (cryptonight_hash_ctx_s == nullptr || cryptonight_hash_ctx_d == nullptr ||
+        cryptonight_hash_ctx_t == nullptr || cryptonight_hash_ctx_q == nullptr) {
         return false;
     }
 
-    char output[64];
+    char output[128];
 
-    struct cryptonight_ctx *ctx = (struct cryptonight_ctx*) _mm_malloc(sizeof(struct cryptonight_ctx), 16);
-    ctx->memory = (uint8_t *) _mm_malloc(MEMORY * 2, 16);
+    auto ctx = (struct cryptonight_ctx*) _mm_malloc(sizeof(struct cryptonight_ctx), 16);
+    ctx->memory = (uint8_t *) _mm_malloc(MEMORY * 4, 16);
 
     cryptonight_hash_ctx_s(test_input, 76, output, ctx);
-
     bool resultSingle = memcmp(output, algo == Options::ALGO_CRYPTONIGHT_LITE ? test_output1 : test_output0, 32) == 0;
 
     cryptonight_hash_ctx_d(test_input, 76, output, ctx);
+    bool resultDouble = memcmp(output, algo == Options::ALGO_CRYPTONIGHT_LITE ? test_output1 : test_output0, 64) == 0;
+
+    cryptonight_hash_ctx_t(test_input, 76, output, ctx);
+    bool resultTriple = memcmp(output, algo == Options::ALGO_CRYPTONIGHT_LITE ? test_output1 : test_output0, 96) == 0;
+
+    cryptonight_hash_ctx_q(test_input, 76, output, ctx);
+    bool resultQuad = memcmp(output, algo == Options::ALGO_CRYPTONIGHT_LITE ? test_output1 : test_output0, 128) == 0;
 
     _mm_free(ctx->memory);
     _mm_free(ctx);
 
-    bool resultDouble = memcmp(output, algo == Options::ALGO_CRYPTONIGHT_LITE ? test_output1 : test_output0, 64) == 0;
-
-    return resultSingle && resultDouble;
+    return resultSingle && resultDouble && resultTriple && resultQuad;
 }
