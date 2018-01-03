@@ -146,7 +146,7 @@ void ClientStatus::setHugepagesEnabled(bool hugepagesEnabled)
     m_isHugepagesEnabled = hugepagesEnabled;
 }
 
-int ClientStatus::hashFactor() const
+int ClientStatus::getHashFactor() const
 {
     return m_hashFactor;
 }

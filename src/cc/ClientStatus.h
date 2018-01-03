@@ -85,7 +85,7 @@ public:
     bool isHugepagesEnabled() const;
     void setHugepagesEnabled(bool hugepagesEnabled);
 
-    int hashFactor() const;
+    int getHashFactor() const;
     void setHashFactor(int hashFactor);
 
     bool isCpuX64() const;
