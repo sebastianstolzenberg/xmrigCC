@@ -1,14 +1,15 @@
 cmake_minimum_required(VERSION 2.8)
 project(xmrig)
 
-#set(CMAKE_BUILD_TYPE Debug)
-#set(CMAKE_BUILD_TYPE Release)
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
+endif(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 
 option(WITH_LIBCPUID  "Use Libcpuid" ON)
 option(WITH_AEON      "CryptoNight-Lite support" ON)
 option(WITH_HTTPD     "HTTP REST API" OFF)
-option(WITH_CC_CLIENT "CC Client" OFF)
-option(WITH_CC_SERVER "CC Server" OFF)
+option(WITH_CC_CLIENT "CC Client" ON)
+option(WITH_CC_SERVER "CC Server" ON)
 
 include (CheckIncludeFile)
 include (cmake/cpu.cmake)
