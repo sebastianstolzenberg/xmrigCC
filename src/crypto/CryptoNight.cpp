@@ -33,12 +33,10 @@
 #include "crypto/CryptoNight_test.h"
 #include "Options.h"
 
-
-void (*cryptonight_hash_ctx_s)(const void *input, size_t size, void *output, cryptonight_ctx *ctx) = nullptr;
+void (*cryptonight_hash_ctx_s)(const void *input, size_t size, void *output, cryptonight_ctx *ctx)  = nullptr;
 void (*cryptonight_hash_ctx_d)(const void *input, size_t size, void *output, cryptonight_ctx *ctx) = nullptr;
 void (*cryptonight_hash_ctx_t)(const void *input, size_t size, void *output, cryptonight_ctx *ctx) = nullptr;
 void (*cryptonight_hash_ctx_q)(const void *input, size_t size, void *output, cryptonight_ctx *ctx) = nullptr;
-
 
 static void cryptonight_av1_aesni(const void *input, size_t size, void *output, struct cryptonight_ctx *ctx) {
 #   if !defined(XMRIG_ARMv7)
@@ -146,26 +144,6 @@ void (*cryptonight_variations[16])(const void *input, size_t size, void *output,
             cryptonight_lite_av8_softaes_quad
 };
 
-
-void CryptoNight::hash(const uint8_t* input, size_t size, uint8_t* output, cryptonight_ctx* ctx)
-{
-    cryptonight_hash_ctx_s(input, size, output, ctx);
-}
-
-void CryptoNight::hashDouble(const uint8_t* input, size_t size, uint8_t* output, cryptonight_ctx* ctx)
-{
-    cryptonight_hash_ctx_d(input, size, output, ctx);
-}
-
-void CryptoNight::hashTriple(const uint8_t* input, size_t size, uint8_t* output, cryptonight_ctx* ctx)
-{
-    cryptonight_hash_ctx_t(input, size, output, ctx);
-}
-
-void CryptoNight::hashQuad(const uint8_t* input, size_t size, uint8_t* output, cryptonight_ctx* ctx)
-{
-    cryptonight_hash_ctx_q(input, size, output, ctx);
-}
 
 bool CryptoNight::init(int algo, int variant)
 {

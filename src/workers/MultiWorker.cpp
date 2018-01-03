@@ -106,54 +106,15 @@ void MultiWorker<FACTOR>::start()
 
             m_count += FACTOR;
 
-            *Job::nonce(m_state->blob)                       = ++m_state->nonces[0];
-            if (FACTOR > 1) {
-                *Job::nonce(m_state->blob + m_state->job.size()) = ++m_state->nonces[1];
-            }
-            if (FACTOR > 2) {
-                *Job::nonce(m_state->blob + 2 * m_state->job.size()) = ++m_state->nonces[2];
-            }
-            if (FACTOR > 3) {
-                *Job::nonce(m_state->blob + 3 * m_state->job.size()) = ++m_state->nonces[3];
+            for (size_t i=0; i < FACTOR; ++i) {
+                *Job::nonce(m_state->blob + i * m_state->job.size()) = ++m_state->nonces[i];
             }
 
-            switch (FACTOR) {
-                case 2:
-                    CryptoNight::hashDouble(m_state->blob, m_state->job.size(), m_hash, m_ctx);
-                    break;
-                case 3:
-                    CryptoNight::hashTriple(m_state->blob, m_state->job.size(), m_hash, m_ctx);
-                    break;
-                case 4:
-                    CryptoNight::hashQuad(m_state->blob, m_state->job.size(), m_hash, m_ctx);
-                    break;
-                case 1:
-                default:
-                    CryptoNight::hash(m_state->blob, m_state->job.size(), m_hash, m_ctx);
-                    break;
-            }
+            CryptoNight::hash<FACTOR>(m_state->blob, m_state->job.size(), m_hash, m_ctx);
 
-            if (*reinterpret_cast<uint64_t*>(m_hash + 24) < m_state->job.target()) {
-                Workers::submit(JobResult(m_state->job.poolId(), m_state->job.id(), m_state->nonces[0], m_hash, m_state->job.diff()), m_id);
-            }
-
-            if (FACTOR > 1) {
-                if (*reinterpret_cast<uint64_t *>(m_hash + 32 + 24) < m_state->job.target()) {
-                    Workers::submit(JobResult(m_state->job.poolId(), m_state->job.id(), m_state->nonces[1], m_hash + 32,
-                                              m_state->job.diff()), m_id);
-                }
-            }
-
-            if (FACTOR > 2) {
-                if (*reinterpret_cast<uint64_t *>(m_hash + 64 + 24) < m_state->job.target()) {
-                    Workers::submit(JobResult(m_state->job.poolId(), m_state->job.id(), m_state->nonces[2], m_hash + 32,
-                                              m_state->job.diff()), m_id);
-                }
-            }
-
-            if (FACTOR > 3) {
-                if (*reinterpret_cast<uint64_t *>(m_hash + 69 + 24) < m_state->job.target()) {
-                    Workers::submit(JobResult(m_state->job.poolId(), m_state->job.id(), m_state->nonces[3], m_hash + 32,
+            for (size_t i=0; i < FACTOR; ++i) {
+                if (*reinterpret_cast<uint64_t *>(m_hash + 24 + i * 32) < m_state->job.target()) {
+                    Workers::submit(JobResult(m_state->job.poolId(), m_state->job.id(), m_state->nonces[i], m_hash + i * 32,
                                               m_state->job.diff()), m_id);
                 }
             }
@@ -192,42 +153,16 @@ void MultiWorker<FACTOR>::consumeJob()
     }
 
     m_state->job = std::move(job);
-    memcpy(m_state->blob,                       m_state->job.blob(), m_state->job.size());
-    if (FACTOR > 1) {
-        memcpy(m_state->blob + m_state->job.size(), m_state->job.blob(), m_state->job.size());
-    }
-    if (FACTOR > 2) {
-        memcpy(m_state->blob + 2 * m_state->job.size(), m_state->job.blob(), m_state->job.size());
-    }
-    if (FACTOR > 3) {
-        memcpy(m_state->blob + 3 * m_state->job.size(), m_state->job.blob(), m_state->job.size());
-    }
 
-    if (m_state->job.isNicehash()) {
-        m_state->nonces[0] = (*Job::nonce(m_state->blob)                       & 0xff000000U) + (0xffffffU / (m_threads * 2) * m_id);
-        if (FACTOR > 1) {
-            m_state->nonces[1] = (*Job::nonce(m_state->blob + m_state->job.size()) & 0xff000000U) +
-                              (0xffffffU / (m_threads * 2) * (m_id + m_threads));
+    for (size_t i=0; i < FACTOR; ++i) {
+        memcpy(m_state->blob + i * m_state->job.size(), m_state->job.blob(), m_state->job.size());
+        if (m_state->job.isNicehash()) {
+            m_state->nonces[i] = (*Job::nonce(m_state->blob + m_state->job.size()) & 0xff000000U) +
+                                 (0xffffffU / (m_threads * FACTOR) * (m_id + i * m_threads));
         }
-        if (FACTOR > 2) {
-            m_state->nonces[2] = (*Job::nonce(m_state->blob + m_state->job.size()) & 0xff000000U) +
-                                (0xffffffU / (m_threads * 2) * (m_id + 2 * m_threads));
-        }
-        if (FACTOR > 3) {
-            m_state->nonces[3] = (*Job::nonce(m_state->blob + m_state->job.size()) & 0xff000000U) +
-                                (0xffffffU / (m_threads * 2) * (m_id + 3 * m_threads));
-        }
-    }
-    else {
-        m_state->nonces[0] = 0xffffffffU / (m_threads * 2) * m_id;
-        if (FACTOR > 1) {
-            m_state->nonces[1] = 0xffffffffU / (m_threads * 2) * (m_id + m_threads);
-        }
-        if (FACTOR > 2) {
-            m_state->nonces[2] = 0xffffffffU / (m_threads * 2) * (m_id + 2 * m_threads);
-        }
-        if (FACTOR > 3) {
-            m_state->nonces[3] = 0xffffffffU / (m_threads * 2) * (m_id + 3 * m_threads);
+        else {
+            m_state->nonces[i] = std::numeric_limits<uint32_t>::max() / (m_threads * FACTOR) *
+                                 (m_id + i * m_threads);
         }
     }
 }

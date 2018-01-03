@@ -48,18 +48,46 @@ struct cryptonight_ctx {
 class Job;
 class JobResult;
 
+extern void (*cryptonight_hash_ctx_s)(const void *input, size_t size, void *output, cryptonight_ctx *ctx);
+extern void (*cryptonight_hash_ctx_d)(const void *input, size_t size, void *output, cryptonight_ctx *ctx);
+extern void (*cryptonight_hash_ctx_t)(const void *input, size_t size, void *output, cryptonight_ctx *ctx);
+extern void (*cryptonight_hash_ctx_q)(const void *input, size_t size, void *output, cryptonight_ctx *ctx);
 
 class CryptoNight
 {
 public:
-    static void hash(const uint8_t* input, size_t size, uint8_t* output, cryptonight_ctx* ctx);
     static bool init(int algo, int variant);
-    static void hashDouble(const uint8_t* input, size_t size, uint8_t* output, cryptonight_ctx* ctx);
-    static void hashTriple(const uint8_t* input, size_t size, uint8_t* output, cryptonight_ctx* ctx);
-    static void hashQuad(const uint8_t* input, size_t size, uint8_t* output, cryptonight_ctx* ctx);
+
+    template <size_t HASH_FACTOR = 1>
+    static void hash(const uint8_t* input, size_t size, uint8_t* output, cryptonight_ctx* ctx);
 
 private:
     static bool selfTest(int algo);
 };
+
+template <>
+inline void CryptoNight::hash<1>(const uint8_t* input, size_t size, uint8_t* output, cryptonight_ctx* ctx)
+{
+    cryptonight_hash_ctx_s(input, size, output, ctx);
+}
+
+template <>
+inline void CryptoNight::hash<2>(const uint8_t* input, size_t size, uint8_t* output, cryptonight_ctx* ctx)
+{
+    cryptonight_hash_ctx_d(input, size, output, ctx);
+}
+
+template <>
+inline void CryptoNight::hash<3>(const uint8_t* input, size_t size, uint8_t* output, cryptonight_ctx* ctx)
+{
+    cryptonight_hash_ctx_t(input, size, output, ctx);
+}
+
+template <>
+inline void CryptoNight::hash<4>(const uint8_t* input, size_t size, uint8_t* output, cryptonight_ctx* ctx)
+{
+    cryptonight_hash_ctx_q(input, size, output, ctx);
+}
+
 
 #endif /* __CRYPTONIGHT_H__ */
