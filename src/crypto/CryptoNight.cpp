@@ -35,47 +35,62 @@
 #include "crypto/CryptoNight_test.h"
 #include "Options.h"
 
-template <size_t MULTI_FACTOR>
+template <size_t NUM_HASH_BLOCKS>
 static void cryptonight_aesni(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
 #   if !defined(XMRIG_ARMv7)
-  cryptonight_multi_hash<0x80000, MEMORY, 0x1FFFF0, false, MULTI_FACTOR>(input, size, output, ctx);
+  cryptonight_multi_hash<0x80000, MEMORY, 0x1FFFF0, false, NUM_HASH_BLOCKS>(input, size, output, ctx);
 #   endif
 }
 
-template <size_t MULTI_FACTOR>
+template <size_t NUM_HASH_BLOCKS>
 static void cryptonight_softaes(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
-  cryptonight_multi_hash<0x80000, MEMORY, 0x1FFFF0, true, MULTI_FACTOR>(input, size, output, ctx);
+  cryptonight_multi_hash<0x80000, MEMORY, 0x1FFFF0, true, NUM_HASH_BLOCKS>(input, size, output, ctx);
 }
 
-template <size_t MULTI_FACTOR>
+template <size_t NUM_HASH_BLOCKS>
 static void cryptonight_lite_aesni(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
 #   if !defined(XMRIG_ARMv7)
-  cryptonight_multi_hash<0x40000, MEMORY_LITE, 0xFFFF0, false, MULTI_FACTOR>(input, size, output, ctx);
+  cryptonight_multi_hash<0x40000, MEMORY_LITE, 0xFFFF0, false, NUM_HASH_BLOCKS>(input, size, output, ctx);
 #   endif
 }
 
-template <size_t MULTI_FACTOR>
+template <size_t NUM_HASH_BLOCKS>
 static void cryptonight_lite_softaes(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
-  cryptonight_multi_hash<0x40000, MEMORY_LITE, 0xFFFF0, true, MULTI_FACTOR>(input, size, output, ctx);
+  cryptonight_multi_hash<0x40000, MEMORY_LITE, 0xFFFF0, true, NUM_HASH_BLOCKS>(input, size, output, ctx);
 }
 
-void (*cryptonight_variations[2][2][4])(const void *input, size_t size, void *output, cryptonight_ctx *ctx) = {
+void (*cryptonight_hash_ctx[MAX_NUM_HASH_BLOCKS])(const void *input, size_t size, void *output, cryptonight_ctx *ctx);
 
-    { // Cryptonight
-        // AESni
-        {cryptonight_aesni<1>, cryptonight_aesni<2>, cryptonight_aesni<3>, cryptonight_aesni<4>},
-        // Soft AES
-        {cryptonight_softaes<1>, cryptonight_softaes<2>, cryptonight_softaes<3>, cryptonight_softaes<4>}
-    },
-    { // Cryptonight-lite
-        // AESni
-        {cryptonight_lite_aesni<1>, cryptonight_lite_aesni<2>, cryptonight_lite_aesni<3>, cryptonight_lite_aesni<4>},
-        // Soft AES
-        {cryptonight_lite_softaes<1>, cryptonight_lite_softaes<2>, cryptonight_lite_softaes<3>, cryptonight_lite_softaes<4>}
+template <size_t HASH_FACTOR>
+void setCryptoNightHashMethods(Options::Algo algo, bool aesni)
+{
+
+    switch (algo) {
+        case Options::ALGO_CRYPTONIGHT:
+            if (aesni) {
+                cryptonight_hash_ctx[HASH_FACTOR - 1] = cryptonight_aesni<HASH_FACTOR>;
+            } else {
+                cryptonight_hash_ctx[HASH_FACTOR - 1] = cryptonight_softaes<HASH_FACTOR>;
+            }
+            break;
+
+        case Options::ALGO_CRYPTONIGHT_LITE:
+            if (aesni) {
+                cryptonight_hash_ctx[HASH_FACTOR - 1] = cryptonight_lite_aesni<HASH_FACTOR>;
+            } else {
+                cryptonight_hash_ctx[HASH_FACTOR - 1] = cryptonight_lite_softaes<HASH_FACTOR>;
+            }
+            break;
     }
-};
+    // next iteration
+    setCryptoNightHashMethods<HASH_FACTOR-1>(algo, aesni);
+}
 
-void (**cryptonight_hash_ctx)(const void *input, size_t size, void *output, cryptonight_ctx *ctx)  = nullptr;
+template <>
+void setCryptoNightHashMethods<0>(Options::Algo algo, bool aesni)
+{
+    // template recursion abort
+};
 
 bool CryptoNight::init(int algo, int variant)
 {
@@ -84,7 +99,7 @@ bool CryptoNight::init(int algo, int variant)
         return false;
     }
 
-    cryptonight_hash_ctx = cryptonight_variations[algo][variant < 5 ? 0 : 1];
+    setCryptoNightHashMethods<MAX_NUM_HASH_BLOCKS>(static_cast<Options::Algo>(algo), variant < 5);
 
     return selfTest(algo);
 }

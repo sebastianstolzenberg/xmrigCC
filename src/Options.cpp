@@ -122,6 +122,7 @@ static char const short_options[] = "a:c:khBp:Px:r:R:s:t:T:o:u:O:v:Vl:S";
 static struct option const options[] = {
     { "algo",             1, nullptr, 'a'  },
     { "av",               1, nullptr, 'v'  },
+    { "multi-hash",       1, nullptr, 'm'  },
     { "background",       0, nullptr, 'B'  },
     { "config",           1, nullptr, 'c'  },
     { "cpu-affinity",     1, nullptr, 1020 },
@@ -167,6 +168,7 @@ static struct option const options[] = {
 static struct option const config_options[] = {
     { "algo",          1, nullptr, 'a'  },
     { "av",            1, nullptr, 'v'  },
+    { "multi-hash",    1, nullptr, 'm'  },
     { "background",    0, nullptr, 'B'  },
     { "colors",        0, nullptr, 2000 },
     { "cpu-affinity",  1, nullptr, 1020 },
@@ -271,8 +273,8 @@ Options::Options(int argc, char **argv) :
     m_ccAdminPass(nullptr),
     m_ccClientConfigFolder(nullptr),
     m_ccCustomDashboard(nullptr),
-    m_algo(0),
-    m_algoVariant(0),
+    m_algo(ALGO_CRYPTONIGHT),
+    m_algoVariant(AV0_AUTO),
     m_hashFactor(1),
     m_apiPort(0),
     m_donateLevel(kDonateLevel),
@@ -334,15 +336,6 @@ Options::Options(int argc, char **argv) :
     }
 
     m_algoVariant = getAlgoVariant();
-    if (m_algoVariant == AV2_AESNI_DOUBLE || m_algoVariant == AV6_SOFT_AES_DOUBLE) {
-        m_hashFactor = 2;
-    }
-    else if (m_algoVariant == AV3_AESNI_TRIPLE || m_algoVariant == AV7_SOFT_AES_TRIPLE) {
-        m_hashFactor = 3;
-    }
-    else if (m_algoVariant == AV4_AESNI_QUAD || m_algoVariant == AV8_SOFT_AES_QUAD) {
-        m_hashFactor = 4;
-    }
 #endif
 
     if (!m_threads) {
@@ -495,6 +488,7 @@ bool Options::parseArg(int key, const char *arg)
     case 'r':  /* --retries */
     case 'R':  /* --retry-pause */
     case 'v':  /* --av */
+    case 'm':  /* --multi-hash */
     case 1003: /* --donate-level */
     case 1004: /* --max-cpu-usage */
     case 1007: /* --print-time */
@@ -597,7 +591,15 @@ bool Options::parseArg(int key, uint64_t arg)
             return false;
         }
 
-        m_algoVariant = (int) arg;
+        m_algoVariant = static_cast<AlgoVariant>(arg);
+        break;
+
+    case 'm':  /* --multi-hash */
+        if (arg < 0 || arg > MAX_NUM_HASH_BLOCKS) {
+            showUsage(1);
+            return false;
+        }
+        m_hashFactor = arg;
         break;
 
     case 1003: /* --donate-level */
@@ -845,7 +847,7 @@ bool Options::setAlgo(const char *algo)
 {
     for (size_t i = 0; i < ARRAY_SIZE(algo_names); i++) {
         if (algo_names[i] && !strcmp(algo, algo_names[i])) {
-            m_algo = (int) i;
+            m_algo = static_cast<Algo>(i);
             break;
         }
 
@@ -866,40 +868,18 @@ bool Options::setAlgo(const char *algo)
 }
 
 
-int Options::getAlgoVariant() const
+Options::AlgoVariant Options::getAlgoVariant() const
 {
-#   ifndef XMRIG_NO_AEON
-    if (m_algo == ALGO_CRYPTONIGHT_LITE) {
-        return getAlgoVariantLite();
-    }
-#   endif
-
     if (m_algoVariant <= AV0_AUTO || m_algoVariant >= AV_MAX) {
-        return Cpu::hasAES() ? AV1_AESNI : AV5_SOFT_AES;
+        return Cpu::hasAES() ? AV1_AESNI : AV2_SOFT_AES;
     }
 
-    if (m_safe && !Cpu::hasAES() && m_algoVariant <= AV2_AESNI_DOUBLE) {
-        return m_algoVariant + 4;
+    if (m_safe && !Cpu::hasAES() && m_algoVariant != AV2_SOFT_AES) {
+        return AV2_SOFT_AES;
     }
 
     return m_algoVariant;
 }
-
-
-#ifndef XMRIG_NO_AEON
-int Options::getAlgoVariantLite() const
-{
-    if (m_algoVariant <= AV0_AUTO || m_algoVariant >= AV_MAX) {
-        return Cpu::hasAES() ? AV2_AESNI_DOUBLE : AV6_SOFT_AES_DOUBLE;
-    }
-
-    if (m_safe && !Cpu::hasAES() && m_algoVariant <= AV2_AESNI_DOUBLE) {
-        return m_algoVariant + 4;
-    }
-
-    return m_algoVariant;
-}
-#endif
 
 bool Options::parseCCUrl(const char* url)
 {

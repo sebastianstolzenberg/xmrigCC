@@ -10,6 +10,7 @@ option(WITH_AEON      "CryptoNight-Lite support" ON)
 option(WITH_HTTPD     "HTTP REST API" OFF)
 option(WITH_CC_CLIENT "CC Client" ON)
 option(WITH_CC_SERVER "CC Server" ON)
+set(MAX_NUM_HASH_BLOCKS 8)
 
 include (CheckIncludeFile)
 include (cmake/cpu.cmake)
@@ -166,6 +167,7 @@ endif()
 add_definitions(/D__STDC_FORMAT_MACROS)
 add_definitions(/DUNICODE)
 #add_definitions(/DAPP_DEBUG)
+add_definitions(/DMAX_NUM_HASH_BLOCKS=${MAX_NUM_HASH_BLOCKS})
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 

@@ -48,13 +48,7 @@ public:
     enum AlgoVariant {
         AV0_AUTO,
         AV1_AESNI,
-        AV2_AESNI_DOUBLE,
-        AV3_AESNI_TRIPLE,
-        AV4_AESNI_QUAD,
-        AV5_SOFT_AES,
-        AV6_SOFT_AES_DOUBLE,
-        AV7_SOFT_AES_TRIPLE,
-        AV8_SOFT_AES_QUAD,
+        AV2_SOFT_AES,
         AV_MAX
     };
 
@@ -122,11 +116,7 @@ private:
 
     bool setAlgo(const char *algo);
 
-    int getAlgoVariant() const;
-#   ifndef XMRIG_NO_AEON
-    int getAlgoVariantLite() const;
-#   endif
-
+    AlgoVariant getAlgoVariant() const;
 
     bool m_background;
     bool m_colors;
@@ -147,9 +137,9 @@ private:
     char *m_ccAdminPass;
     char *m_ccClientConfigFolder;
     char *m_ccCustomDashboard;
-    int m_algo;
-    int m_algoVariant;
-    int m_hashFactor;
+    Algo m_algo;
+    AlgoVariant m_algoVariant;
+    size_t m_hashFactor;
     int m_apiPort;
     int m_donateLevel;
     int m_maxCpuUsage;

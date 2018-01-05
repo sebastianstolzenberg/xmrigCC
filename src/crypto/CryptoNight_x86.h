@@ -306,17 +306,17 @@ static inline void cn_implode_scratchpad(const __m128i *input, __m128i *output)
     _mm_store_si128(output + 11, xout7);
 }
 
-template<size_t ITERATIONS, size_t MEM, size_t MASK, bool SOFT_AES, size_t MULTI_FACTOR>
+template<size_t ITERATIONS, size_t MEM, size_t MASK, bool SOFT_AES, size_t NUM_HASH_BLOCKS>
 inline void cryptonight_multi_hash(const void *__restrict__ input, size_t size, void *__restrict__ output, cryptonight_ctx *__restrict__ ctx)
 {
-    const uint8_t* l[MULTI_FACTOR];
-    uint64_t* h[MULTI_FACTOR];
-    uint64_t al[MULTI_FACTOR];
-    uint64_t ah[MULTI_FACTOR];
-    __m128i bx[MULTI_FACTOR];
-    uint64_t idx[MULTI_FACTOR];
+    const uint8_t* l[NUM_HASH_BLOCKS];
+    uint64_t* h[NUM_HASH_BLOCKS];
+    uint64_t al[NUM_HASH_BLOCKS];
+    uint64_t ah[NUM_HASH_BLOCKS];
+    __m128i bx[NUM_HASH_BLOCKS];
+    uint64_t idx[NUM_HASH_BLOCKS];
 
-    for (size_t hashBlock=0; hashBlock<MULTI_FACTOR; ++hashBlock) {
+    for (size_t hashBlock=0; hashBlock<NUM_HASH_BLOCKS; ++hashBlock) {
         keccak(static_cast<const uint8_t *>(input) + hashBlock * size, (int) size, ctx->state[hashBlock], 200);
 
         l[hashBlock] = ctx->memory + hashBlock * MEM;
@@ -331,7 +331,7 @@ inline void cryptonight_multi_hash(const void *__restrict__ input, size_t size, 
     }
 
     for (size_t i = 0; i < ITERATIONS; i++) {
-        for (size_t hashBlock=0; hashBlock<MULTI_FACTOR; ++hashBlock) {
+        for (size_t hashBlock=0; hashBlock<NUM_HASH_BLOCKS; ++hashBlock) {
             __m128i cx;
             cx = _mm_load_si128((__m128i *) &l[hashBlock][idx[hashBlock] & MASK]);
 
@@ -362,7 +362,7 @@ inline void cryptonight_multi_hash(const void *__restrict__ input, size_t size, 
         }
     }
 
-    for (size_t hashBlock=0; hashBlock<MULTI_FACTOR; ++hashBlock) {
+    for (size_t hashBlock=0; hashBlock<NUM_HASH_BLOCKS; ++hashBlock) {
         cn_implode_scratchpad<MEM, SOFT_AES>((__m128i *) l[hashBlock], (__m128i *) h[hashBlock]);
         keccakf(h[hashBlock], 24);
         extra_hashes[ctx->state[hashBlock][0] & 3](ctx->state[hashBlock], 200, static_cast<char *>(output) + hashBlock * 32);
