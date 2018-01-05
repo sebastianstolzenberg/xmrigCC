@@ -60,7 +60,7 @@ void SingleWorker::start()
             m_count++;
             *m_job.nonce() = ++m_result.nonce;
 
-            CryptoNight::hash(m_job.blob(), m_job.size(), m_result.result, m_ctx);
+            CryptoNight::hash(1, m_job.blob(), m_job.size(), m_result.result, m_ctx);
 
             if (*reinterpret_cast<uint64_t*>(m_result.result + 24) < m_job.target()) {
                 Workers::submit(m_result, m_id);
