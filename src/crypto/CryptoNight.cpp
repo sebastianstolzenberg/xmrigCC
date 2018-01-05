@@ -38,90 +38,90 @@ void (*cryptonight_hash_ctx_d)(const void *input, size_t size, void *output, cry
 void (*cryptonight_hash_ctx_t)(const void *input, size_t size, void *output, cryptonight_ctx *ctx) = nullptr;
 void (*cryptonight_hash_ctx_q)(const void *input, size_t size, void *output, cryptonight_ctx *ctx) = nullptr;
 
+
 static void cryptonight_av1_aesni(const void *input, size_t size, void *output, struct cryptonight_ctx *ctx) {
 #   if !defined(XMRIG_ARMv7)
-    cryptonight_hash<0x80000, MEMORY, 0x1FFFF0, false>(input, size, output, ctx);
+    cryptonight_multi_hash<0x80000, MEMORY, 0x1FFFF0, false, 1>(input, size, output, ctx);
 #   endif
 }
 
 
 static void cryptonight_av2_aesni_double(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
 #   if !defined(XMRIG_ARMv7)
-    cryptonight_double_hash<0x80000, MEMORY, 0x1FFFF0, false>(input, size, output, ctx);
+    cryptonight_multi_hash<0x80000, MEMORY, 0x1FFFF0, false, 2>(input, size, output, ctx);
 #   endif
 }
 
 static void cryptonight_av3_aesni_triple(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
 #   if !defined(XMRIG_ARMv7)
-    cryptonight_triple_hash<0x80000, MEMORY, 0x1FFFF0, false>(input, size, output, ctx);
+    cryptonight_multi_hash<0x80000, MEMORY, 0x1FFFF0, false, 3>(input, size, output, ctx);
 #   endif
 }
 
 static void cryptonight_av4_aesni_quad(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
 #   if !defined(XMRIG_ARMv7)
-    cryptonight_quad_hash<0x80000, MEMORY, 0x1FFFF0, false>(input, size, output, ctx);
+    cryptonight_multi_hash<0x80000, MEMORY, 0x1FFFF0, false, 4>(input, size, output, ctx);
 #   endif
 }
 
 static void cryptonight_av5_softaes(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
-    cryptonight_hash<0x80000, MEMORY, 0x1FFFF0, true>(input, size, output, ctx);
+    cryptonight_multi_hash<0x80000, MEMORY, 0x1FFFF0, true, 1>(input, size, output, ctx);
 }
 
 
 static void cryptonight_av6_softaes_double(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
-    cryptonight_double_hash<0x80000, MEMORY, 0x1FFFF0, true>(input, size, output, ctx);
+    cryptonight_multi_hash<0x80000, MEMORY, 0x1FFFF0, true, 2>(input, size, output, ctx);
 }
 
 
 static void cryptonight_av7_softaes_triple(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
-    cryptonight_triple_hash<0x80000, MEMORY, 0x1FFFF0, true>(input, size, output, ctx);
+    cryptonight_multi_hash<0x80000, MEMORY, 0x1FFFF0, true, 3>(input, size, output, ctx);
 }
 
 
 static void cryptonight_av8_softaes_quad(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
-    cryptonight_quad_hash<0x80000, MEMORY, 0x1FFFF0, true>(input, size, output, ctx);
+    cryptonight_multi_hash<0x80000, MEMORY, 0x1FFFF0, true, 4>(input, size, output, ctx);
 }
 
 static void cryptonight_lite_av1_aesni(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
 #   if !defined(XMRIG_ARMv7)
-    cryptonight_hash<0x40000, MEMORY_LITE, 0xFFFF0, false>(input, size, output, ctx);
+    cryptonight_multi_hash<0x40000, MEMORY_LITE, 0xFFFF0, false, 1>(input, size, output, ctx);
 #endif
 }
 
-
 static void cryptonight_lite_av2_aesni_double(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
 #   if !defined(XMRIG_ARMv7)
-    cryptonight_double_hash<0x40000, MEMORY_LITE, 0xFFFF0, false>(input, size, output, ctx);
+    cryptonight_multi_hash<0x40000, MEMORY_LITE, 0xFFFF0, false, 2>(input, size, output, ctx);
 #   endif
 }
 
 static void cryptonight_lite_av3_aesni_triple(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
 #   if !defined(XMRIG_ARMv7)
-    cryptonight_triple_hash<0x40000, MEMORY_LITE, 0xFFFF0, false>(input, size, output, ctx);
+    cryptonight_multi_hash<0x40000, MEMORY_LITE, 0xFFFF0, false, 3>(input, size, output, ctx);
 #   endif
 }
 
 static void cryptonight_lite_av4_aesni_quad(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
 #   if !defined(XMRIG_ARMv7)
-    cryptonight_quad_hash<0x40000, MEMORY_LITE, 0xFFFF0, false>(input, size, output, ctx);
+    cryptonight_multi_hash<0x40000, MEMORY_LITE, 0xFFFF0, false, 4>(input, size, output, ctx);
 #   endif
 }
 
 
 static void cryptonight_lite_av5_softaes(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
-    cryptonight_hash<0x40000, MEMORY_LITE, 0xFFFF0, true>(input, size, output, ctx);
+    cryptonight_multi_hash<0x40000, MEMORY_LITE, 0xFFFF0, true, 1>(input, size, output, ctx);
 }
 
 static void cryptonight_lite_av6_softaes_double(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
-    cryptonight_double_hash<0x40000, MEMORY_LITE, 0xFFFF0, true>(input, size, output, ctx);
+    cryptonight_multi_hash<0x40000, MEMORY_LITE, 0xFFFF0, true, 2>(input, size, output, ctx);
 }
 
 static void cryptonight_lite_av7_softaes_triple(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
-    cryptonight_triple_hash<0x40000, MEMORY_LITE, 0xFFFF0, true>(input, size, output, ctx);
+    cryptonight_multi_hash<0x40000, MEMORY_LITE, 0xFFFF0, true, 3>(input, size, output, ctx);
 }
 
 static void cryptonight_lite_av8_softaes_quad(const void *input, size_t size, void *output, cryptonight_ctx *ctx) {
-    cryptonight_quad_hash<0x40000, MEMORY_LITE, 0xFFFF0, true>(input, size, output, ctx);
+    cryptonight_multi_hash<0x40000, MEMORY_LITE, 0xFFFF0, true, 4>(input, size, output, ctx);
 }
 
 

@@ -37,10 +37,7 @@
 
 
 struct cryptonight_ctx {
-    VAR_ALIGN(16, uint8_t state0[200]);
-    VAR_ALIGN(16, uint8_t state1[200]);
-    VAR_ALIGN(16, uint8_t state2[200]);
-    VAR_ALIGN(16, uint8_t state3[200]);
+    VAR_ALIGN(16, uint8_t state[4][208]); // 208 instead of 200 to maintain aligned to 16 byte boundaries
     VAR_ALIGN(16, uint8_t* memory);
 };
 
