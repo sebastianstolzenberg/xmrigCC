@@ -10,7 +10,7 @@ option(WITH_AEON      "CryptoNight-Lite support" ON)
 option(WITH_HTTPD     "HTTP REST API" OFF)
 option(WITH_CC_CLIENT "CC Client" ON)
 option(WITH_CC_SERVER "CC Server" ON)
-set(MAX_NUM_HASH_BLOCKS 8)
+set(MAX_NUM_HASH_BLOCKS 4)
 
 include (CheckIncludeFile)
 include (cmake/cpu.cmake)

@@ -338,7 +338,7 @@ Options::Options(int argc, char **argv) :
     m_algoVariant = getAlgoVariant();
 #endif
 
-    if (!m_threads) {
+    if (m_threads == 0) {
         m_threads = Cpu::optimalThreadsCount(m_algo, m_hashFactor, m_maxCpuUsage);
     }
     else if (m_safe) {
@@ -346,6 +346,11 @@ Options::Options(int argc, char **argv) :
         if (m_threads > count) {
             m_threads = count;
         }
+    }
+
+    if (m_hashFactor == 0)
+    {
+        m_hashFactor = Cpu::optimalHashFactor(m_algo, m_threads);
     }
 
     for (Url *url : m_pools) {

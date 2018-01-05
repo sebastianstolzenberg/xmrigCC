@@ -25,6 +25,7 @@
 #include <libcpuid.h>
 #include <cmath>
 #include <cstring>
+#include <algorithm>
 
 #include "Cpu.h"
 
@@ -38,19 +39,29 @@ int Cpu::m_sockets       = 1;
 int Cpu::m_totalCores    = 0;
 int Cpu::m_totalThreads  = 0;
 
-
-int Cpu::optimalThreadsCount(int algo, int hashFactor, int maxCpuUsage)
+size_t Cpu::availableCache()
 {
-    if (m_totalThreads == 1) {
-        return 1;
-    }
-
-    int cache = 0;
+    size_t cache = 0;
     if (m_l3_cache) {
         cache = m_l2_exclusive ? (m_l2_cache + m_l3_cache) : m_l3_cache;
     }
     else {
         cache = m_l2_cache;
+    }
+    return cache;
+}
+
+size_t Cpu::optimalThreadsCount(int algo, int hashFactor, int maxCpuUsage)
+{
+    if (m_totalThreads == 1) {
+        return 1;
+    }
+
+    const size_t cache = availableCache();
+
+    if (hashFactor == 0) {
+        // hashFactor is set to auto, assumes smallest possible factor
+        hashFactor = 1;
     }
 
     int count = 0;
@@ -74,6 +85,13 @@ int Cpu::optimalThreadsCount(int algo, int hashFactor, int maxCpuUsage)
     return count < 1 ? 1 : count;
 }
 
+size_t Cpu::optimalHashFactor(int algo, int threadsCount)
+{
+    const size_t algoSize = (algo ? 1024 : 2048);
+    const size_t cache = availableCache();
+
+    return std::min(cache / algoSize / threadsCount, static_cast<size_t>(MAX_NUM_HASH_BLOCKS));
+}
 
 void Cpu::initCommon()
 {
