@@ -38,11 +38,9 @@ set(HEADERS
     src/net/strategies/SinglePoolStrategy.h
     src/net/SubmitResult.h
     src/version.h
-    src/workers/DoubleWorker.h
     src/workers/MultiWorker.h
     src/workers/Handle.h
     src/workers/Hashrate.h
-    src/workers/SingleWorker.h
     src/workers/Worker.h
     src/workers/Workers.h
    )
@@ -80,11 +78,9 @@ set(SOURCES
     src/net/strategies/SinglePoolStrategy.cpp
     src/net/SubmitResult.cpp
     src/Summary.cpp
-    src/workers/DoubleWorker.cpp
     src/workers/MultiWorker.cpp
     src/workers/Handle.cpp
     src/workers/Hashrate.cpp
-    src/workers/SingleWorker.cpp
     src/workers/Worker.cpp
     src/workers/Workers.cpp
     src/xmrig.cpp

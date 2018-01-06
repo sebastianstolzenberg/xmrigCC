@@ -33,7 +33,6 @@
 #include "workers/MultiWorker.h"
 #include "workers/Handle.h"
 #include "workers/Hashrate.h"
-#include "workers/SingleWorker.h"
 #include "workers/Workers.h"
 
 
@@ -152,13 +151,7 @@ void Workers::submit(const JobResult &result, int threadId)
 void Workers::onReady(void *arg)
 {
     auto handle = static_cast<Handle*>(arg);
-    if (Mem::hashFactor(handle->threadId()) > 1) {
-        handle->setWorker(createMultiWorker(Mem::hashFactor(handle->threadId()), handle));
-    }
-    else {
-        handle->setWorker(new SingleWorker(handle));
-    }
-
+    handle->setWorker(createMultiWorker(Mem::hashFactor(handle->threadId()), handle));
     handle->worker()->start();
 }
 
