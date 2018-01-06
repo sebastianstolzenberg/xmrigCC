@@ -31,11 +31,10 @@
 #include "Mem.h"
 
 
-template <size_t FACTOR>
 class MultiWorker : public Worker
 {
 public:
-    explicit MultiWorker(Handle *handle);
+    explicit MultiWorker(Handle *handle, size_t hashMultiplier);
     ~MultiWorker();
 
     void start() override;
@@ -47,44 +46,53 @@ private:
 
     class State;
 
-    uint8_t m_hash[32*FACTOR];
+    uint8_t* m_hash;
     State *m_state;
     State *m_pausedState;
+    size_t m_hashMultiplier;
 };
 
-template <size_t FACTOR>
-class MultiWorker<FACTOR>::State
+class MultiWorker::State
 {
 public:
-  State()
+  State(size_t hashMultiplier)
   {
-      for(uint32_t& nonce : nonces) {
-          nonce = 0;
+      nonces = new uint32_t[hashMultiplier];
+      blob = new uint8_t[84 * hashMultiplier];
+
+      for(size_t i=0; i<hashMultiplier; ++i) {
+          nonces[i] = 0;
       }
   }
 
+  ~State() {
+      delete[] blob;
+      delete[] nonces;
+  }
+
   Job job;
-  uint32_t nonces[FACTOR];
-  uint8_t blob[84 * FACTOR];
+  uint32_t* nonces;
+  uint8_t* blob;
 };
 
-template <size_t FACTOR>
-MultiWorker<FACTOR>::MultiWorker(Handle *handle)
-    : Worker(handle)
+
+MultiWorker::MultiWorker(Handle *handle, size_t hashMultiplier)
+    : Worker(handle),
+      m_hash(new uint8_t[32 * hashMultiplier]),
+      m_state(new MultiWorker::State(hashMultiplier)),
+      m_pausedState(new MultiWorker::State(hashMultiplier)),
+      m_hashMultiplier(hashMultiplier)
 {
-    m_state       = new MultiWorker<FACTOR>::State();
-    m_pausedState = new MultiWorker<FACTOR>::State();
 }
 
-template <size_t FACTOR>
-MultiWorker<FACTOR>::~MultiWorker()
+MultiWorker::~MultiWorker()
 {
+    delete[] m_hash;
     delete m_state;
     delete m_pausedState;
 }
 
-template <size_t FACTOR>
-void MultiWorker<FACTOR>::start()
+void MultiWorker::start()
 {
     while (Workers::sequence() > 0) {
         if (Workers::isPaused()) {
@@ -105,15 +113,15 @@ void MultiWorker<FACTOR>::start()
                 storeStats();
             }
 
-            m_count += FACTOR;
+            m_count += m_hashMultiplier;
 
-            for (size_t i=0; i < FACTOR; ++i) {
+            for (size_t i=0; i < m_hashMultiplier; ++i) {
                 *Job::nonce(m_state->blob + i * m_state->job.size()) = ++m_state->nonces[i];
             }
 
-            CryptoNight::hash(FACTOR, m_state->blob, m_state->job.size(), m_hash, m_ctx);
+            CryptoNight::hash(m_hashMultiplier, m_state->blob, m_state->job.size(), m_hash, m_ctx);
 
-            for (size_t i=0; i < FACTOR; ++i) {
+            for (size_t i=0; i < m_hashMultiplier; ++i) {
                 if (*reinterpret_cast<uint64_t *>(m_hash + 24 + i * 32) < m_state->job.target()) {
                     Workers::submit(JobResult(m_state->job.poolId(), m_state->job.id(), m_state->nonces[i], m_hash + i * 32,
                                               m_state->job.diff()), m_id);
@@ -127,8 +135,7 @@ void MultiWorker<FACTOR>::start()
     }
 }
 
-template <size_t FACTOR>
-bool MultiWorker<FACTOR>::resume(const Job &job)
+bool MultiWorker::resume(const Job &job)
 {
     if (m_state->job.poolId() == -1 && job.poolId() >= 0 && job.id() == m_pausedState->job.id()) {
         *m_state = *m_pausedState;
@@ -138,8 +145,7 @@ bool MultiWorker<FACTOR>::resume(const Job &job)
     return false;
 }
 
-template <size_t FACTOR>
-void MultiWorker<FACTOR>::consumeJob()
+void MultiWorker::consumeJob()
 {
     Job job = Workers::job();
     m_sequence = Workers::sequence();
@@ -155,7 +161,7 @@ void MultiWorker<FACTOR>::consumeJob()
 
     m_state->job = std::move(job);
 
-    for (size_t i=0; i < FACTOR; ++i) {
+    for (size_t i=0; i < m_hashMultiplier; ++i) {
         memcpy(m_state->blob + i * m_state->job.size(), m_state->job.blob(), m_state->job.size());
         if (m_state->job.isNicehash()) {
             m_state->nonces[i] = (*Job::nonce(m_state->blob + m_state->job.size()) & 0xff000000U) +
@@ -168,8 +174,7 @@ void MultiWorker<FACTOR>::consumeJob()
     }
 }
 
-template <size_t FACTOR>
-void MultiWorker<FACTOR>::save(const Job &job)
+void MultiWorker::save(const Job &job)
 {
     if (job.poolId() == -1 && m_state->job.poolId() >= 0) {
         *m_pausedState = *m_state;
@@ -177,15 +182,5 @@ void MultiWorker<FACTOR>::save(const Job &job)
 }
 
 Worker* createMultiWorker(size_t numHashes, Handle *handle) {
-    switch (numHashes) {
-        case 2:
-            return new MultiWorker<2>(handle);
-        case 3:
-            return new MultiWorker<3>(handle);
-        case 4:
-            return new MultiWorker<4>(handle);
-        case 1:
-        default:
-            return new MultiWorker<1>(handle);
-    }
+    return new MultiWorker(handle, numHashes);
 }
