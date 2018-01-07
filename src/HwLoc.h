@@ -58,7 +58,7 @@ namespace hwloc {
         Cache(const Topology &topo, hwloc_obj_t hwLocObject);
         std::string toString() const;
         // cache size
-        size_t size();
+        size_t size() const;
         // physical cores
         std::vector<Core> cores();
     };
@@ -72,6 +72,8 @@ namespace hwloc {
         HwLoc();
 
         std::vector<Cache> getCaches(uint32_t level);
+
+        std::vector<Core> getCores();
 
         size_t getNumberOfCores();
 

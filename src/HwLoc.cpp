@@ -107,11 +107,11 @@ namespace hwloc {
         std::ostringstream out;
         out << "Cache " << hwLocObject()->logical_index
             << " osIndex=" << hwLocObject()->os_index
-            << " size=" << hwLocObject()->attr->cache.size;
+            << " size=" << size();
         return out.str();
     }
 
-    size_t Cache::size() {
+    size_t Cache::size() const{
         return hwLocObject()->attr->cache.size;
     }
 
@@ -169,6 +169,25 @@ namespace hwloc {
             }
         }
         return caches;
+    }
+
+    std::vector<Core> HwLoc::getCores() {
+        std::vector<Core> cores;
+
+        if (!initialized()) return cores;
+
+        int depth = hwloc_get_type_depth(topology(), HWLOC_OBJ_CORE);
+        unsigned numberOfCores = 0;
+        if (depth == HWLOC_TYPE_DEPTH_UNKNOWN) {
+            numberOfCores = 0;
+        } else {
+            numberOfCores = hwloc_get_nbobjs_by_depth(topology(), depth);
+
+            for (size_t i=0; i<numberOfCores; ++i) {
+                cores.push_back(Core(sharedTopology(), hwloc_get_obj_by_depth(topology(), depth, i)));
+            }
+        }
+        return cores;
     }
 
     size_t HwLoc::getNumberOfCores() {
