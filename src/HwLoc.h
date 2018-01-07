@@ -31,6 +31,7 @@ namespace hwloc {
     class HwLocObject : public TopologySharer {
     public:
         HwLocObject(const Topology &topo, hwloc_obj_t hwLocObject);
+        std::string toString() const;
         hwloc_obj_t hwLocObject();
         const hwloc_obj_t hwLocObject() const;
     private:
@@ -72,8 +73,8 @@ namespace hwloc {
         HwLoc();
 
         std::vector<Cache> getCaches(uint32_t level);
-
         std::vector<Core> getCores();
+        std::vector<ProcessingUnit> getProcessingUnits();
 
         size_t getNumberOfCores();
 

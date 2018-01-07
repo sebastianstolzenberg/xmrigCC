@@ -97,7 +97,7 @@ void testHwLoc() {
     }
     std::cout << "---------------------------------------------------" << std::endl << std::endl;
 
-    std::cout << std::endl << "---------------------------------------------------" << std::endl;
+    std::cout << "---------------------------------------------------" << std::endl;
     std::cout             << "HWLOC: Analyzing Cores" << std::endl;
     auto cores = hwloc.getCores();
     std::cout             << "HWLOC: found " << cores.size()
@@ -105,11 +105,21 @@ void testHwLoc() {
     for (auto core : cores) {
         std::cout         << "HWLOC: |-" << core.toString() << std::endl;
         auto processingUnits = core.processingUnits();
-        std::cout         << "HWLOC: | |has " << cores.size()
-                          << " core(s)" << std::endl;
+        std::cout         << "HWLOC: | |has " << processingUnits.size()
+                          << " processingUnit(s)" << std::endl;
         for (auto pu : core.processingUnits()) {
             std::cout     << "HWLOC: | |-" << pu.toString() << std::endl;
         }
+    }
+    std::cout << "---------------------------------------------------" << std::endl << std::endl;
+
+    std::cout << "---------------------------------------------------" << std::endl;
+    std::cout             << "HWLOC: Analyzing Processing Units" << std::endl;
+    auto processingUnits = hwloc.getProcessingUnits();
+    std::cout             << "HWLOC: found " << processingUnits.size()
+                          << " Processing Unit(s)" << std::endl;
+    for (auto pu : processingUnits) {
+        std::cout         << "HWLOC: |-" << pu.toString() << std::endl;
     }
     std::cout << "---------------------------------------------------" << std::endl << std::endl;
 

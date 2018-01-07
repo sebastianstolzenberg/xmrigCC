@@ -43,6 +43,15 @@ namespace hwloc {
         }
     }
 
+    std::string HwLocObject::toString() const {
+        std::ostringstream out;
+        out <<  "L#"  << hwLocObject()->logical_index
+            << " OS#" << hwLocObject()->os_index
+            << " MEM" << hwLocObject()->memory.local_memory
+            << " NAM" << hwLocObject()->name;
+        return out.str();
+    }
+
     hwloc_obj_t HwLocObject::hwLocObject() {
         return m_hwLocObject;
     };
@@ -60,9 +69,7 @@ namespace hwloc {
 
     std::string ProcessingUnit::toString() const {
         std::ostringstream out;
-        out << "ProcessingUnit"
-            << "_l" << hwLocObject()->logical_index
-            << "_os" << hwLocObject()->os_index;
+        out << "ProcessingUnit " << HwLocObject::toString();
         return out.str();
     }
 
@@ -73,9 +80,7 @@ namespace hwloc {
 
     std::string Core::toString() const {
         std::ostringstream out;
-        out << "Core"
-            << "_l" << hwLocObject()->logical_index
-            << "_os" << hwLocObject()->os_index;
+        out << "Core " << HwLocObject::toString();
         return out.str();
     }
 
@@ -105,8 +110,7 @@ namespace hwloc {
 
     std::string Cache::toString() const {
         std::ostringstream out;
-        out << "Cache " << hwLocObject()->logical_index
-            << " osIndex=" << hwLocObject()->os_index
+        out << "Cache " << HwLocObject::toString()
             << " size=" << size();
         return out.str();
     }
@@ -188,6 +192,25 @@ namespace hwloc {
             }
         }
         return cores;
+    }
+
+    std::vector<ProcessingUnit> HwLoc::getProcessingUnits() {
+        std::vector<ProcessingUnit> processingUnits;
+
+        if (!initialized()) return processingUnits;
+
+        int depth = hwloc_get_type_depth(topology(), HWLOC_OBJ_PU);
+        unsigned numberOfPus = 0;
+        if (depth == HWLOC_TYPE_DEPTH_UNKNOWN) {
+            numberOfPus = 0;
+        } else {
+            numberOfPus = hwloc_get_nbobjs_by_depth(topology(), depth);
+
+            for (size_t i=0; i<numberOfPus; ++i) {
+                processingUnits.push_back(ProcessingUnit(sharedTopology(), hwloc_get_obj_by_depth(topology(), depth, i)));
+            }
+        }
+        return processingUnits;
     }
 
     size_t HwLoc::getNumberOfCores() {
