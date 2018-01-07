@@ -221,10 +221,10 @@ void ApiState::getMiner(rapidjson::Document &doc) const
     auto &allocator = doc.GetAllocator();
 
     rapidjson::Value cpu(rapidjson::kObjectType);
-    cpu.AddMember("brand",   rapidjson::StringRef(Cpu::brand()), allocator);
-    cpu.AddMember("aes",     Cpu::hasAES(), allocator);
-    cpu.AddMember("x64",     Cpu::isX64(), allocator);
-    cpu.AddMember("sockets", Cpu::sockets(), allocator);
+    cpu.AddMember("brand",   rapidjson::StringRef(Cpu::instance().brand()), allocator);
+    cpu.AddMember("aes",     Cpu::instance().hasAES(), allocator);
+    cpu.AddMember("x64",     Cpu::instance().isX64(), allocator);
+    cpu.AddMember("sockets", Cpu::instance().sockets(), allocator);
 
     doc.AddMember("version",      APP_VERSION, allocator);
     doc.AddMember("kind",         APP_KIND, allocator);

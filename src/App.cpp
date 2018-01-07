@@ -64,7 +64,8 @@ App::App(int argc, char **argv) :
 {
     m_self = this;
 
-    Cpu::init();
+    Cpu::instance();
+
     m_options = Options::parse(argc, argv);
     if (!m_options) {
         return;
@@ -141,6 +142,7 @@ int App::start()
     }
 
     Mem::allocate(m_options);
+
     Summary::print();
 
 #   ifndef XMRIG_NO_API

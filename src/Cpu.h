@@ -37,32 +37,23 @@ public:
         BMI2   = 4
     };
 
-    static size_t availableCache();
-    static size_t optimalThreadsCount(int algo, int hashFactor, int maxCpuUsage);
-    static size_t optimalHashFactor(int algo, int threadsCount);
-    static void init();
-    static void setAffinity(int id, uint64_t mask);
+    static Cpu& instance();
 
-    static inline bool hasAES()       { return (m_flags & AES) != 0; }
-    static inline bool isX64()        { return (m_flags & X86_64) != 0; }
-    static inline const char *brand() { return m_brand; }
-    static inline int cores()         { return m_totalCores; }
-    static inline int l2()            { return m_l2_cache; }
-    static inline int l3()            { return m_l3_cache; }
-    static inline int sockets()       { return m_sockets; }
-    static inline int threads()       { return m_totalThreads; }
+    virtual size_t optimalThreadsCount(int algo, int hashFactor, int maxCpuUsage) = 0;
+    virtual size_t optimalHashFactor(int algo, int threadsCount) = 0;
+    virtual void setAffinity(int id, uint64_t mask) = 0;
 
-private:
-    static void initCommon();
+    virtual bool hasAES() = 0;
+    virtual bool isX64() = 0;
+    virtual const char *brand() = 0;
+    virtual int cores() = 0;
+    virtual int l2() = 0;
+    virtual int l3() = 0;
+    virtual int sockets() = 0;
+    virtual int threads() = 0;
 
-    static bool m_l2_exclusive;
-    static char m_brand[64];
-    static int m_flags;
-    static int m_l2_cache;
-    static int m_l3_cache;
-    static int m_sockets;
-    static int m_totalCores;
-    static int m_totalThreads;
+protected:
+    virtual ~Cpu() {}
 };
 
 

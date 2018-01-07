@@ -339,10 +339,10 @@ Options::Options(int argc, char **argv) :
 #endif
 
     if (m_threads == 0) {
-        m_threads = Cpu::optimalThreadsCount(m_algo, m_hashFactor, m_maxCpuUsage);
+        m_threads = Cpu::instance().optimalThreadsCount(m_algo, m_hashFactor, m_maxCpuUsage);
     }
     else if (m_safe) {
-        const int count = Cpu::optimalThreadsCount(m_algo, m_hashFactor, m_maxCpuUsage);
+        const int count = Cpu::instance().optimalThreadsCount(m_algo, m_hashFactor, m_maxCpuUsage);
         if (m_threads > count) {
             m_threads = count;
         }
@@ -350,7 +350,7 @@ Options::Options(int argc, char **argv) :
 
     if (m_hashFactor == 0)
     {
-        m_hashFactor = Cpu::optimalHashFactor(m_algo, m_threads);
+        m_hashFactor = Cpu::instance().optimalHashFactor(m_algo, m_threads);
     }
 
     for (Url *url : m_pools) {
@@ -518,7 +518,7 @@ bool Options::parseArg(int key, const char *arg)
 
     case 't':  /* --threads */
         if (strncmp(arg, "all", 3) == 0) {
-            m_threads = Cpu::threads();
+            m_threads = Cpu::instance().threads();
             return true;
         }
 
@@ -876,10 +876,10 @@ bool Options::setAlgo(const char *algo)
 Options::AlgoVariant Options::getAlgoVariant() const
 {
     if (m_algoVariant <= AV0_AUTO || m_algoVariant >= AV_MAX) {
-        return Cpu::hasAES() ? AV1_AESNI : AV2_SOFT_AES;
+        return Cpu::instance().hasAES() ? AV1_AESNI : AV2_SOFT_AES;
     }
 
-    if (m_safe && !Cpu::hasAES() && m_algoVariant != AV2_SOFT_AES) {
+    if (m_safe && !Cpu::instance().hasAES() && m_algoVariant != AV2_SOFT_AES) {
         return AV2_SOFT_AES;
     }
 

@@ -22,24 +22,107 @@
  */
 
 
-#include <libcpuid.h>
 #include <cmath>
 #include <cstring>
 #include <algorithm>
+#include <memory>
+
+#include <libcpuid.h>
+#include <iostream>
 
 #include "Cpu.h"
+#include "HwLoc.h"
 
+class CpuImpl : public Cpu
+{
+public:
+    CpuImpl();
+    void init();
 
-bool Cpu::m_l2_exclusive = false;
-char Cpu::m_brand[64]    = { 0 };
-int Cpu::m_flags         = 0;
-int Cpu::m_l2_cache      = 0;
-int Cpu::m_l3_cache      = 0;
-int Cpu::m_sockets       = 1;
-int Cpu::m_totalCores    = 0;
-int Cpu::m_totalThreads  = 0;
+    size_t availableCache();
+    size_t optimalThreadsCount(int algo, int hashFactor, int maxCpuUsage);
+    size_t optimalHashFactor(int algo, int threadsCount);
+    void setAffinity(int id, uint64_t mask);
 
-size_t Cpu::availableCache()
+    bool hasAES()       { return (m_flags & AES) != 0; }
+    bool isX64()        { return (m_flags & X86_64) != 0; }
+    const char *brand() { return m_brand; }
+    int cores()         { return m_totalCores; }
+    int l2()            { return m_l2_cache; }
+    int l3()            { return m_l3_cache; }
+    int sockets()       { return m_sockets; }
+    int threads()       { return m_totalThreads; }
+
+private:
+    void initCommon();
+
+    bool m_l2_exclusive;
+    char m_brand[64];
+    int m_flags;
+    int m_l2_cache;
+    int m_l3_cache;
+    int m_sockets;
+    int m_totalCores;
+    int m_totalThreads;
+
+    std::vector<hwloc_cpuset_t> m_theadDistribution;
+};
+
+void testHwLoc() {
+    hwloc::HwLoc hwloc;
+
+    std::cout << std::endl << "---------------------------------------------------" << std::endl;
+    std::cout             << "HWLOC: Analyzing CPUs" << std::endl;
+    auto l3Caches = hwloc.getL3Caches();
+    std::cout             << "HWLOC: found " << l3Caches.size()
+                          << " L3 Cache(s)" << std::endl;
+    for (auto cache : l3Caches) {
+        std::cout         << "HWLOC: |-" << cache.toString() << std::endl;
+        auto cores = cache.cores();
+        std::cout         << "HWLOC: | |has " << cores.size()
+                          << " core(s)" << std::endl;
+        for (auto core : cache.cores()) {
+            std::cout     << "HWLOC: | |-" << core.toString() << std::endl;
+            auto processingUnits = core.processingUnits();
+            std::cout     << "HWLOC: | | |has " << processingUnits.size()
+                          << " processing unit(s)" << std::endl;
+            for (auto pu : processingUnits) {
+                std::cout << "HWLOC: | | | -" << pu.toString() << std::endl;
+            }
+        }
+    }
+    std::cout << "---------------------------------------------------" << std::endl << std::endl;
+
+    //hwloc.distriburtOverCpus(hwloc.getNumberOfCores());
+}
+
+Cpu& Cpu::instance() {
+    static CpuImpl cpu;
+    return cpu;
+}
+
+CpuImpl::CpuImpl()
+    : m_l2_exclusive(false)
+    , m_brand{ 0 }
+    , m_flags(0)
+    , m_l2_cache(0)
+    , m_l3_cache(0)
+    , m_sockets(1)
+    , m_totalCores(0)
+    , m_totalThreads(0) {
+    init();
+}
+
+void CpuImpl::init()
+{
+#   ifdef XMRIG_NO_LIBCPUID
+    m_totalThreads = sysconf(_SC_NPROCESSORS_CONF);
+#   endif
+
+    initCommon();
+}
+
+size_t CpuImpl::availableCache()
 {
     size_t cache = 0;
     if (m_l3_cache) {
@@ -51,7 +134,7 @@ size_t Cpu::availableCache()
     return cache;
 }
 
-size_t Cpu::optimalThreadsCount(int algo, int hashFactor, int maxCpuUsage)
+size_t CpuImpl::optimalThreadsCount(int algo, int hashFactor, int maxCpuUsage)
 {
     if (m_totalThreads == 1) {
         return 1;
@@ -85,7 +168,7 @@ size_t Cpu::optimalThreadsCount(int algo, int hashFactor, int maxCpuUsage)
     return count < 1 ? 1 : count;
 }
 
-size_t Cpu::optimalHashFactor(int algo, int threadsCount)
+size_t CpuImpl::optimalHashFactor(int algo, int threadsCount)
 {
     const size_t algoSize = (algo ? 1024 : 2048);
     const size_t cache = availableCache();
@@ -93,8 +176,10 @@ size_t Cpu::optimalHashFactor(int algo, int threadsCount)
     return std::min(cache / algoSize / threadsCount, static_cast<size_t>(MAX_NUM_HASH_BLOCKS));
 }
 
-void Cpu::initCommon()
+void CpuImpl::initCommon()
 {
+    //testHwLoc();
+
     struct cpu_raw_data_t raw = { 0 };
     struct cpu_id_t data = { 0 };
 
@@ -132,5 +217,29 @@ void Cpu::initCommon()
 
     if (data.flags[CPU_FEATURE_BMI2]) {
         m_flags |= BMI2;
+    }
+}
+
+void CpuImpl::setAffinity(int id, uint64_t mask)
+{
+    cpu_set_t set;
+    CPU_ZERO(&set);
+
+    for (int i = 0; i < m_totalThreads; i++) {
+        if (mask & (1UL << i)) {
+            CPU_SET(i, &set);
+        }
+    }
+
+    if (id == -1) {
+#       ifndef __FreeBSD__
+        sched_setaffinity(0, sizeof(&set), &set);
+#       endif
+    } else {
+#       ifndef __ANDROID__
+        pthread_setaffinity_np(pthread_self(), sizeof(&set), &set);
+#       else
+        sched_setaffinity(gettid(), sizeof(&set), &set);
+#       endif
     }
 }
