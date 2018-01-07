@@ -71,7 +71,7 @@ namespace hwloc {
     public:
         HwLoc();
 
-        std::vector<Cache> getL3Caches();
+        std::vector<Cache> getCaches(uint32_t level);
 
         size_t getNumberOfCores();
 

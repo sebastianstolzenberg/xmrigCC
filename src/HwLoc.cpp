@@ -38,6 +38,9 @@ namespace hwloc {
     HwLocObject::HwLocObject(const Topology &topo, hwloc_obj_t hwLocObject) :
             TopologySharer(topo),
             m_hwLocObject(hwLocObject) {
+        if (hwLocObject == nullptr) {
+          std::cout << "ERR: hwLocObject is null";
+        }
     }
 
     hwloc_obj_t HwLocObject::hwLocObject() {
@@ -148,33 +151,33 @@ namespace hwloc {
 
     }
 
-    std::vector<Cache> HwLoc::getL3Caches() {
-        std::vector<Cache> l3Caches;
+    std::vector<Cache> HwLoc::getCaches(uint32_t level) {
+        std::vector<Cache> caches;
 
-        if (!initialized()) return l3Caches;
+        if (!initialized()) return caches;
 
-        int depth = hwloc_get_cache_type_depth(topology(), 3, HWLOC_OBJ_CACHE_DATA);
-        unsigned numberOfCaches = 1;
+        int depth = hwloc_get_cache_type_depth(topology(), level, HWLOC_OBJ_CACHE_DATA);
+        unsigned numberOfCaches = 0;
         if (depth == HWLOC_TYPE_DEPTH_UNKNOWN) {
-            numberOfCaches = 1;
+            numberOfCaches = 0;
         } else {
             numberOfCaches = hwloc_get_nbobjs_by_depth(topology(), depth);
-        }
-        l3Caches.reserve(numberOfCaches);
+            caches.reserve(numberOfCaches);
 
-        for (size_t i=0; i<numberOfCaches; ++i) {
-            l3Caches.push_back(Cache(sharedTopology(), hwloc_get_obj_by_depth(topology(), depth, i)));
+            for (size_t i=0; i<numberOfCaches; ++i) {
+                caches.push_back(Cache(sharedTopology(), hwloc_get_obj_by_depth(topology(), depth, i)));
+            }
         }
-        return l3Caches;
+        return caches;
     }
 
     size_t HwLoc::getNumberOfCores() {
         if (!initialized()) return 1;
 
         int depth = hwloc_get_type_depth(topology(), HWLOC_OBJ_CORE);
-        unsigned numberOfCores = 1;
+        unsigned numberOfCores = 0;
         if (depth == HWLOC_TYPE_DEPTH_UNKNOWN) {
-            numberOfCores = 1;
+            numberOfCores = 0;
         } else {
             numberOfCores = hwloc_get_nbobjs_by_depth(topology(), depth);
         }

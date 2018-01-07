@@ -73,10 +73,14 @@ void testHwLoc() {
 
     std::cout << std::endl << "---------------------------------------------------" << std::endl;
     std::cout             << "HWLOC: Analyzing CPUs" << std::endl;
-    auto l3Caches = hwloc.getL3Caches();
-    std::cout             << "HWLOC: found " << l3Caches.size()
+    auto caches = hwloc.getCaches(3);
+    std::cout             << "HWLOC: found " << caches.size()
                           << " L3 Cache(s)" << std::endl;
-    for (auto cache : l3Caches) {
+    if (caches.empty()) {
+        caches = hwloc.getCaches(2);
+        std::cout         << "HWLOC: found " << caches.size() << " L2 Cache(s)" << std::endl;
+    }
+    for (auto cache : caches) {
         std::cout         << "HWLOC: |-" << cache.toString() << std::endl;
         auto cores = cache.cores();
         std::cout         << "HWLOC: | |has " << cores.size()
@@ -178,7 +182,7 @@ size_t CpuImpl::optimalHashFactor(int algo, int threadsCount)
 
 void CpuImpl::initCommon()
 {
-    //testHwLoc();
+    testHwLoc();
 
     struct cpu_raw_data_t raw = { 0 };
     struct cpu_id_t data = { 0 };
