@@ -34,6 +34,11 @@ namespace hwloc {
         std::string toString() const;
         hwloc_obj_t hwLocObject();
         const hwloc_obj_t hwLocObject() const;
+
+    protected:
+        template <class C>
+        std::vector<C> getContained(hwloc_obj_type_t type);
+
     private:
         hwloc_obj_t m_hwLocObject;
     };
@@ -50,6 +55,7 @@ namespace hwloc {
     public:
         Core(const Topology &topo, hwloc_obj_t hwLocObject);
         std::string toString() const;
+        // virtual processing units
         std::vector<ProcessingUnit> processingUnits();
     };
 
@@ -62,6 +68,21 @@ namespace hwloc {
         size_t size() const;
         // physical cores
         std::vector<Core> cores();
+        // virtual processing units
+        std::vector<ProcessingUnit> processingUnits();
+    };
+
+    // ------------------------------------------------------------------------
+    class Root : public HwLocObject {
+    public:
+        Root(const Topology &topo, hwloc_obj_t hwLocObject);
+        std::string toString() const;
+        // caches
+        std::vector<Cache> getCaches(uint32_t level);
+        // physical cores
+        std::vector<Core> cores();
+        // virtual processing units
+        std::vector<ProcessingUnit> processingUnits();
     };
 
     // ------------------------------------------------------------------------
@@ -72,6 +93,7 @@ namespace hwloc {
     public:
         HwLoc();
 
+        Root root();
         std::vector<Cache> getCaches(uint32_t level);
         std::vector<Core> getCores();
         std::vector<ProcessingUnit> getProcessingUnits();
