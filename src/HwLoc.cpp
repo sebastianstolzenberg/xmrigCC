@@ -152,7 +152,7 @@ std::vector<ProcessingUnit> Root::processingUnits() {
     return getContained<ProcessingUnit>(HWLOC_OBJ_PU);
 }
 
-std::vector<Cache> Root::getCaches(uint32_t level) {
+std::vector<Cache> Root::caches(uint32_t level) {
     std::vector<Cache> caches;
     int depth = hwloc_get_cache_type_depth(topology(), level, HWLOC_OBJ_CACHE_DATA);
     unsigned numberOfCaches = 0;
@@ -191,77 +191,18 @@ Root HwLoc::root()
 }
 
 std::vector<Cache> HwLoc::getCaches(uint32_t level) {
-    std::vector<Cache> caches;
-
-    if (!initialized()) return caches;
-
-    int depth = hwloc_get_cache_type_depth(topology(), level, HWLOC_OBJ_CACHE_DATA);
-    unsigned numberOfCaches = 0;
-    if (depth == HWLOC_TYPE_DEPTH_UNKNOWN) {
-        numberOfCaches = 0;
-    } else {
-        numberOfCaches = hwloc_get_nbobjs_by_depth(topology(), depth);
-        caches.reserve(numberOfCaches);
-
-        for (size_t i=0; i<numberOfCaches; ++i) {
-            caches.push_back(Cache(sharedTopology(), hwloc_get_obj_by_depth(topology(), depth, i)));
-        }
-    }
-    return caches;
+    return root().caches(level);
 }
 
 std::vector<Core> HwLoc::getCores() {
-    std::vector<Core> cores;
-
-    if (!initialized()) return cores;
-
-    int depth = hwloc_get_type_depth(topology(), HWLOC_OBJ_CORE);
-    unsigned numberOfCores = 0;
-    if (depth == HWLOC_TYPE_DEPTH_UNKNOWN) {
-        numberOfCores = 0;
-    } else {
-        numberOfCores = hwloc_get_nbobjs_by_depth(topology(), depth);
-
-        for (size_t i=0; i<numberOfCores; ++i) {
-            cores.push_back(Core(sharedTopology(), hwloc_get_obj_by_depth(topology(), depth, i)));
-        }
-    }
-    return cores;
+    return root().cores();
 }
 
 std::vector<ProcessingUnit> HwLoc::getProcessingUnits() {
-    std::vector<ProcessingUnit> processingUnits;
-
-    if (!initialized()) return processingUnits;
-
-    int depth = hwloc_get_type_depth(topology(), HWLOC_OBJ_PU);
-    unsigned numberOfPus = 0;
-    if (depth == HWLOC_TYPE_DEPTH_UNKNOWN) {
-        numberOfPus = 0;
-    } else {
-        numberOfPus = hwloc_get_nbobjs_by_depth(topology(), depth);
-
-        for (size_t i=0; i<numberOfPus; ++i) {
-            processingUnits.push_back(ProcessingUnit(sharedTopology(), hwloc_get_obj_by_depth(topology(), depth, i)));
-        }
-    }
-    return processingUnits;
+    return root().processingUnits();
 }
 
-size_t HwLoc::getNumberOfCores() {
-    if (!initialized()) return 1;
-
-    int depth = hwloc_get_type_depth(topology(), HWLOC_OBJ_CORE);
-    unsigned numberOfCores = 0;
-    if (depth == HWLOC_TYPE_DEPTH_UNKNOWN) {
-        numberOfCores = 0;
-    } else {
-        numberOfCores = hwloc_get_nbobjs_by_depth(topology(), depth);
-    }
-    return numberOfCores;
-}
-
-void HwLoc::distriburtOverCpus(size_t numThreads) {
+void HwLoc::distributeOverCpus(size_t numThreads) {
     if (!initialized()) return;
 
     hwloc_cpuset_t distributedCpus[numThreads];

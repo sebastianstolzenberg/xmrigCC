@@ -35,6 +35,8 @@ namespace hwloc {
         hwloc_obj_t hwLocObject();
         const hwloc_obj_t hwLocObject() const;
 
+        //void distributeEvenly()
+
     protected:
         template <class C>
         std::vector<C> getContained(hwloc_obj_type_t type);
@@ -42,6 +44,7 @@ namespace hwloc {
     private:
         hwloc_obj_t m_hwLocObject;
     };
+
 
     // ------------------------------------------------------------------------
     class ProcessingUnit : public HwLocObject {
@@ -78,7 +81,7 @@ namespace hwloc {
         Root(const Topology &topo, hwloc_obj_t hwLocObject);
         std::string toString() const;
         // caches
-        std::vector<Cache> getCaches(uint32_t level);
+        std::vector<Cache> caches(uint32_t level);
         // physical cores
         std::vector<Core> cores();
         // virtual processing units
@@ -98,9 +101,7 @@ namespace hwloc {
         std::vector<Core> getCores();
         std::vector<ProcessingUnit> getProcessingUnits();
 
-        size_t getNumberOfCores();
-
-        void distriburtOverCpus(size_t numThreads);
+        void distributeOverCpus(size_t numThreads);
 
     private:
         bool initialized() const;
