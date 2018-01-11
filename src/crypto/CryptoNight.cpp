@@ -119,8 +119,7 @@ void CryptoNight::hash(size_t factor, const uint8_t* input, size_t size, uint8_t
 
 bool CryptoNight::selfTest(int algo)
 {
-    if (cryptonight_hash_ctx == nullptr ||
-        cryptonight_hash_ctx[0] == nullptr || cryptonight_hash_ctx[2] == nullptr ||
+    if (cryptonight_hash_ctx[0] == nullptr || cryptonight_hash_ctx[2] == nullptr ||
         cryptonight_hash_ctx[2] == nullptr || cryptonight_hash_ctx[3] == nullptr) {
         return false;
     }

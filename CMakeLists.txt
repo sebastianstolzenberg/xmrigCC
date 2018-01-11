@@ -275,3 +275,5 @@ if (WITH_CC_SERVER AND MHD_FOUND)
     target_link_libraries(xmrigCCServer ${UV_LIBRARIES} ${MHD_LIBRARY} ${EXTRA_LIBS} ${CPUID_LIB} ${Hwloc_LIBRARIES}) #Boost::chrono Boost::system)
     set_target_properties(xmrigCCServer PROPERTIES COMPILE_FLAGS "-DXMRIG_CC_SERVER ${SHARED_FLAGS}")
 endif()
+
+add_subdirectory(test)

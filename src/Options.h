@@ -125,8 +125,7 @@ private:
 
     bool setAlgo(const char *algo);
 
-    AlgoVariant getAlgoVariant() const;
-    void optimizeAlgorithmCOnfiguration();
+    void optimizeAlgorithmConfiguration();
 
     bool m_background;
     bool m_colors;
@@ -158,7 +157,7 @@ private:
     int m_priority;
     int m_retries;
     int m_retryPause;
-    int m_threads;
+    size_t m_threads;
     int m_ccUpdateInterval;
     int m_ccPort;
     int64_t m_affinity;

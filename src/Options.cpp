@@ -337,11 +337,9 @@ Options::Options(int argc, char **argv) :
         fprintf(stderr, "No pool URL supplied. Exiting.\n");
         return;
     }
-
-    m_algoVariant = getAlgoVariant();
 #endif
 
-    optimizeAlgorithmCOnfiguration();
+    optimizeAlgorithmConfiguration();
 
     for (Url *url : m_pools) {
         url->applyExceptions();
@@ -599,7 +597,7 @@ bool Options::parseArg(int key, uint64_t arg)
         break;
 
     case 'm':  /* --multi-hash */
-        if (arg < 0 || arg > MAX_NUM_HASH_BLOCKS) {
+        if (arg > MAX_NUM_HASH_BLOCKS) {
             showUsage(1);
             return false;
         }
@@ -871,21 +869,7 @@ bool Options::setAlgo(const char *algo)
     return true;
 }
 
-
-Options::AlgoVariant Options::getAlgoVariant() const
-{
-    if (m_algoVariant <= AV0_AUTO || m_algoVariant >= AV_MAX) {
-        return Cpu::instance().hasAES() ? AV1_AESNI : AV2_SOFT_AES;
-    }
-
-    if (m_safe && !Cpu::instance().hasAES() && m_algoVariant != AV2_SOFT_AES) {
-        return AV2_SOFT_AES;
-    }
-
-    return m_algoVariant;
-}
-
-void Options::optimizeAlgorithmCOnfiguration()
+void Options::optimizeAlgorithmConfiguration()
 {
     // backwards compatibility for configs still setting algo variant (av)
     // av overrides mutli-hash and aesni when they are either not set or set to auto
@@ -927,19 +911,7 @@ void Options::optimizeAlgorithmCOnfiguration()
         m_aesni = aesniFromCpu;
     }
 
-    int optimalThreadsCount = Cpu::instance().optimalThreadsCount(m_algo, m_hashFactor, m_maxCpuUsage);
-    if (m_threads == 0) {
-        m_threads = optimalThreadsCount;
-    }
-    else if (m_safe && m_threads > optimalThreadsCount) {
-        m_threads = optimalThreadsCount;;
-    }
-
-    if (m_hashFactor == 0)
-    {
-        m_hashFactor = Cpu::instance().optimalHashFactor(m_algo, m_threads);
-    }
-
+    Cpu::instance().optimizeParameters(m_threads, m_hashFactor, m_algo, m_maxCpuUsage, m_safe);
 }
 
 bool Options::parseCCUrl(const char* url)

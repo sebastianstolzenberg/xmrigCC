@@ -39,7 +39,8 @@ public:
     CpuImpl();
     void init();
 
-    size_t availableCache();
+    void optimizeParameters(size_t& threadsCount, size_t& hashFactor, Options::Algo algo,
+                            int maxCpuUsage, bool safeMode);
     size_t optimalThreadsCount(int algo, int hashFactor, int maxCpuUsage);
     size_t optimalHashFactor(int algo, int threadsCount);
     void setAffinity(int id, uint64_t mask);
@@ -52,6 +53,7 @@ public:
     int l3()            { return m_l3_cache; }
     int sockets()       { return m_sockets; }
     int threads()       { return m_totalThreads; }
+    size_t availableCache();
 
 private:
     void initCommon();
@@ -152,16 +154,45 @@ void CpuImpl::init()
     initCommon();
 }
 
-size_t CpuImpl::availableCache()
+void CpuImpl::optimizeParameters(size_t& threadsCount, size_t& hashFactor,
+                                 Options::Algo algo, int maxCpuUsage, bool safeMode)
 {
-    size_t cache = 0;
-    if (m_l3_cache) {
-        cache = m_l2_exclusive ? (m_l2_cache + m_l3_cache) : m_l3_cache;
+    if (!safeMode && threadsCount > 0 && hashFactor > 0)
+    {
+      // all parameters have been set manually, no optimization necessary
+      return;
     }
-    else {
-        cache = m_l2_cache;
+
+    size_t cache = availableCache();
+    size_t algoBlockSize;
+    switch (algo) {
+        case Options::ALGO_CRYPTONIGHT:
+            algoBlockSize = 2048;
+            break;
+        case Options::ALGO_CRYPTONIGHT_LITE:
+            algoBlockSize = 1024;
+            break;
     }
-    return cache;
+
+    size_t maximumReasonableFactor = cache / algoBlockSize;
+    if (safeMode) {
+        if (threadsCount > maximumReasonableFactor) {
+            threadsCount = maximumReasonableFactor;
+        }
+        if (hashFactor > maximumReasonableFactor / threadsCount) {
+            hashFactor = maximumReasonableFactor / threadsCount;
+        }
+    }
+
+    if (threadsCount == 0) {
+        threadsCount = maximumReasonableFactor;
+    }
+    if (hashFactor == 0) {
+        hashFactor = maximumReasonableFactor / threadsCount;
+    }
+
+    threadsCount = std::max(threadsCount, 1ul);
+    hashFactor   = std::max(hashFactor, 1ul);
 }
 
 size_t CpuImpl::optimalThreadsCount(int algo, int hashFactor, int maxCpuUsage)
@@ -206,9 +237,21 @@ size_t CpuImpl::optimalHashFactor(int algo, int threadsCount)
     return std::min(cache / algoSize / threadsCount, static_cast<size_t>(MAX_NUM_HASH_BLOCKS));
 }
 
+size_t CpuImpl::availableCache()
+{
+    size_t cache = 0;
+    if (m_l3_cache) {
+        cache = m_l2_exclusive ? (m_l2_cache + m_l3_cache) : m_l3_cache;
+    }
+    else {
+        cache = m_l2_cache;
+    }
+    return cache;
+}
+
 void CpuImpl::initCommon()
 {
-    testHwLoc();
+    // testHwLoc();
 
     struct cpu_raw_data_t raw = { 0 };
     struct cpu_id_t data = { 0 };

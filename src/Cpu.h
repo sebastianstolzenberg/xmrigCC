@@ -26,6 +26,7 @@
 
 
 #include <cstdint>
+#include "Options.h"
 
 
 class Cpu
@@ -38,6 +39,10 @@ public:
     };
 
     static Cpu& instance();
+    virtual void init() = 0;
+
+    virtual void optimizeParameters(size_t& threadsCount, size_t& hashFactor, Options::Algo algo,
+                                    int maxCpuUsage, bool safeMode) = 0;
 
     virtual size_t optimalThreadsCount(int algo, int hashFactor, int maxCpuUsage) = 0;
     virtual size_t optimalHashFactor(int algo, int threadsCount) = 0;
@@ -51,6 +56,7 @@ public:
     virtual int l3() = 0;
     virtual int sockets() = 0;
     virtual int threads() = 0;
+    virtual size_t availableCache() = 0;
 
 protected:
     virtual ~Cpu() {}
