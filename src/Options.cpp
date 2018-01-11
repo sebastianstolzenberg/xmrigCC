@@ -122,6 +122,7 @@ static char const short_options[] = "a:c:khBp:Px:r:R:s:t:T:o:u:O:v:Vl:S";
 static struct option const options[] = {
     { "algo",             1, nullptr, 'a'  },
     { "av",               1, nullptr, 'v'  },
+    { "aesni",            1, nullptr, 'A'  },
     { "multi-hash",       1, nullptr, 'm'  },
     { "background",       0, nullptr, 'B'  },
     { "config",           1, nullptr, 'c'  },
@@ -168,6 +169,7 @@ static struct option const options[] = {
 static struct option const config_options[] = {
     { "algo",          1, nullptr, 'a'  },
     { "av",            1, nullptr, 'v'  },
+    { "aesni",         1, nullptr, 'A'  },
     { "multi-hash",    1, nullptr, 'm'  },
     { "background",    0, nullptr, 'B'  },
     { "colors",        0, nullptr, 2000 },
@@ -275,7 +277,8 @@ Options::Options(int argc, char **argv) :
     m_ccCustomDashboard(nullptr),
     m_algo(ALGO_CRYPTONIGHT),
     m_algoVariant(AV0_AUTO),
-    m_hashFactor(1),
+    m_aesni(AESNI_AUTO),
+    m_hashFactor(0),
     m_apiPort(0),
     m_donateLevel(kDonateLevel),
     m_maxCpuUsage(75),
@@ -338,20 +341,7 @@ Options::Options(int argc, char **argv) :
     m_algoVariant = getAlgoVariant();
 #endif
 
-    if (m_threads == 0) {
-        m_threads = Cpu::instance().optimalThreadsCount(m_algo, m_hashFactor, m_maxCpuUsage);
-    }
-    else if (m_safe) {
-        const int count = Cpu::instance().optimalThreadsCount(m_algo, m_hashFactor, m_maxCpuUsage);
-        if (m_threads > count) {
-            m_threads = count;
-        }
-    }
-
-    if (m_hashFactor == 0)
-    {
-        m_hashFactor = Cpu::instance().optimalHashFactor(m_algo, m_threads);
-    }
+    optimizeAlgorithmCOnfiguration();
 
     for (Url *url : m_pools) {
         url->applyExceptions();
@@ -493,6 +483,7 @@ bool Options::parseArg(int key, const char *arg)
     case 'r':  /* --retries */
     case 'R':  /* --retry-pause */
     case 'v':  /* --av */
+    case 'A':  /* --aesni */
     case 'm':  /* --multi-hash */
     case 1003: /* --donate-level */
     case 1004: /* --max-cpu-usage */
@@ -597,6 +588,14 @@ bool Options::parseArg(int key, uint64_t arg)
         }
 
         m_algoVariant = static_cast<AlgoVariant>(arg);
+        break;
+
+    case 'A':  /* --aesni */
+        if (arg < AESNI_AUTO || arg > AESNI_OFF) {
+            showUsage(1);
+            return false;
+        }
+        m_aesni = static_cast<AesNi>(arg);
         break;
 
     case 'm':  /* --multi-hash */
@@ -884,6 +883,63 @@ Options::AlgoVariant Options::getAlgoVariant() const
     }
 
     return m_algoVariant;
+}
+
+void Options::optimizeAlgorithmCOnfiguration()
+{
+    // backwards compatibility for configs still setting algo variant (av)
+    // av overrides mutli-hash and aesni when they are either not set or set to auto
+    if (m_algoVariant != AV0_AUTO) {
+        size_t hashFactor = m_hashFactor;
+        AesNi aesni = m_aesni;
+        switch (m_algoVariant) {
+            case AV1_AESNI:
+                hashFactor = 1;
+                aesni = AESNI_ON;
+                break;
+            case AV2_AESNI_DOUBLE:
+                hashFactor = 2;
+                aesni = AESNI_ON;
+                break;
+            case AV3_SOFT_AES:
+                hashFactor = 1;
+                aesni = AESNI_OFF;
+                break;
+            case AV4_SOFT_AES_DOUBLE:
+                hashFactor = 2;
+                aesni = AESNI_OFF;
+                break;
+            case AV0_AUTO:
+            default:
+                // no change
+                break;
+        }
+        if (m_hashFactor == 0) {
+            m_hashFactor = hashFactor;
+        }
+        if (m_aesni == AESNI_AUTO) {
+            m_aesni = aesni;
+        }
+    }
+
+    AesNi aesniFromCpu = Cpu::instance().hasAES() ? AESNI_ON : AESNI_OFF;
+    if (m_aesni == AESNI_AUTO || m_safe) {
+        m_aesni = aesniFromCpu;
+    }
+
+    int optimalThreadsCount = Cpu::instance().optimalThreadsCount(m_algo, m_hashFactor, m_maxCpuUsage);
+    if (m_threads == 0) {
+        m_threads = optimalThreadsCount;
+    }
+    else if (m_safe && m_threads > optimalThreadsCount) {
+        m_threads = optimalThreadsCount;;
+    }
+
+    if (m_hashFactor == 0)
+    {
+        m_hashFactor = Cpu::instance().optimalHashFactor(m_algo, m_threads);
+    }
+
 }
 
 bool Options::parseCCUrl(const char* url)

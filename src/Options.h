@@ -48,8 +48,16 @@ public:
     enum AlgoVariant {
         AV0_AUTO,
         AV1_AESNI,
-        AV2_SOFT_AES,
+        AV2_AESNI_DOUBLE,
+        AV3_SOFT_AES,
+        AV4_SOFT_AES_DOUBLE,
         AV_MAX
+    };
+
+    enum AesNi {
+        AESNI_AUTO,
+        AESNI_ON,
+        AESNI_OFF
     };
 
     static inline Options* i() { return m_self; }
@@ -73,8 +81,9 @@ public:
     inline const char *ccClientConfigFolder() const { return m_ccClientConfigFolder; }
     inline const char *ccCustomDashboard() const    { return m_ccCustomDashboard == nullptr ? "index.html" : m_ccCustomDashboard; }
     inline const std::vector<Url*> &pools() const   { return m_pools; }
-    inline int algo() const                         { return m_algo; }
-    inline int algoVariant() const                  { return m_algoVariant; }
+    inline Algo algo() const                        { return m_algo; }
+    inline AlgoVariant algoVariant() const          { return m_algoVariant; }
+    inline AesNi aesni() const                      { return m_aesni; }
     inline int hashFactor() const                   { return m_hashFactor; }
     inline int apiPort() const                      { return m_apiPort; }
     inline int donateLevel() const                  { return m_donateLevel; }
@@ -117,6 +126,7 @@ private:
     bool setAlgo(const char *algo);
 
     AlgoVariant getAlgoVariant() const;
+    void optimizeAlgorithmCOnfiguration();
 
     bool m_background;
     bool m_colors;
@@ -139,6 +149,7 @@ private:
     char *m_ccCustomDashboard;
     Algo m_algo;
     AlgoVariant m_algoVariant;
+    AesNi m_aesni;
     size_t m_hashFactor;
     int m_apiPort;
     int m_donateLevel;
