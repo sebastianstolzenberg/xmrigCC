@@ -174,7 +174,7 @@ void CpuImpl::optimizeParameters(size_t& threadsCount, size_t& hashFactor,
             break;
     }
 
-    size_t maximumReasonableFactor = cache / algoBlockSize;
+    size_t maximumReasonableFactor = std::max(cache / algoBlockSize, 1ul);
     if (safeMode) {
         if (threadsCount > maximumReasonableFactor) {
             threadsCount = maximumReasonableFactor;

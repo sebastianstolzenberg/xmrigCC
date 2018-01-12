@@ -1,8 +1,7 @@
 set(SOURCES
-    cpu.cpp
+    test_cpu.cpp
     ../../src/Cpu.cpp
     ../../src/HwLoc.cpp
-    ../../src/
 )
 
 include_directories(../../src)
