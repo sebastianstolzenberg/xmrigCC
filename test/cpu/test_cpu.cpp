@@ -29,12 +29,12 @@ void setMockedCpu(size_t numProcessors, size_t numCores, size_t numPusPerCore, s
     mockCpuId.l3_cache = l3Cache;
     mockCpuId.l2_cache = 128;
 
-    Cpu::instance().init();
+    Cpu::init();
 }
 
 std::pair<size_t, size_t> testOptimize(size_t numThreads, size_t hashFactor, Options::Algo algo, bool safeMode)
 {
-    Cpu::instance().optimizeParameters(numThreads, hashFactor, algo, 100, safeMode);
+    Cpu::optimizeParameters(numThreads, hashFactor, algo, 100, safeMode);
     return std::pair<size_t, size_t>(numThreads, hashFactor);
 }
 
@@ -75,7 +75,7 @@ void test_cpu_optimizeparameters_p1_c1_v1_m1(void)
     const size_t L3_CACHE = 1024;
     setMockedCpu(NUM_PROCESSORS, NUM_CORES, NUM_PUS_PER_CORE, L3_CACHE);
 
-    TEST_ASSERT_EQUAL_UINT32(Cpu::instance().availableCache(), L3_CACHE);
+    TEST_ASSERT_EQUAL_UINT32(Cpu::availableCache(), L3_CACHE);
 
     TEST_ASSERT(Expected(1,1) == testOptimize(0, 0, Options::ALGO_CRYPTONIGHT, false));
     TEST_ASSERT(Expected(1,1) == testOptimize(0, 0, Options::ALGO_CRYPTONIGHT_LITE, false));
@@ -113,7 +113,7 @@ void test_cpu_optimizeparameters_p1_c1_v2_m2(void)
     const size_t L3_CACHE = 2048;
     setMockedCpu(NUM_PROCESSORS, NUM_CORES, NUM_PUS_PER_CORE, L3_CACHE);
 
-    TEST_ASSERT_EQUAL_UINT32(Cpu::instance().availableCache(), L3_CACHE);
+    TEST_ASSERT_EQUAL_UINT32(Cpu::availableCache(), L3_CACHE);
 
     TEST_ASSERT(Expected(1,1) == testOptimize(0, 0, Options::ALGO_CRYPTONIGHT, false));
     TEST_ASSERT(Expected(2,1) == testOptimize(0, 0, Options::ALGO_CRYPTONIGHT_LITE, false));
@@ -151,7 +151,7 @@ void test_cpu_optimizeparameters_p1_c4_v2_m8(void)
     const size_t L3_CACHE = 8 * 1024;
     setMockedCpu(NUM_PROCESSORS, NUM_CORES, NUM_PUS_PER_CORE, L3_CACHE);
 
-    TEST_ASSERT_EQUAL_UINT32(Cpu::instance().availableCache(), L3_CACHE);
+    TEST_ASSERT_EQUAL_UINT32(Cpu::availableCache(), L3_CACHE);
 
     TEST_ASSERT(Expected(4,1) == testOptimize(0, 0, Options::ALGO_CRYPTONIGHT, false));
     TEST_ASSERT(Expected(8,1) == testOptimize(0, 0, Options::ALGO_CRYPTONIGHT_LITE, false));
@@ -201,7 +201,7 @@ void test_cpu_optimizeparameters_p1_c8_v1_m25(void)
     const size_t L3_CACHE = 25 * 1024;
     setMockedCpu(NUM_PROCESSORS, NUM_CORES, NUM_PUS_PER_CORE, L3_CACHE);
 
-    TEST_ASSERT_EQUAL_UINT32(Cpu::instance().availableCache(), L3_CACHE);
+    TEST_ASSERT_EQUAL_UINT32(Cpu::availableCache(), L3_CACHE);
 
     TEST_ASSERT(Expected(8,1) == testOptimize(0, 0, Options::ALGO_CRYPTONIGHT, false));
     TEST_ASSERT(Expected(8,3) == testOptimize(0, 0, Options::ALGO_CRYPTONIGHT_LITE, false));

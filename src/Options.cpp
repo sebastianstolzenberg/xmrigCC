@@ -507,7 +507,7 @@ bool Options::parseArg(int key, const char *arg)
 
     case 't':  /* --threads */
         if (strncmp(arg, "all", 3) == 0) {
-            m_threads = Cpu::instance().threads();
+            m_threads = Cpu::threads();
             return true;
         }
 
@@ -906,12 +906,12 @@ void Options::optimizeAlgorithmConfiguration()
         }
     }
 
-    AesNi aesniFromCpu = Cpu::instance().hasAES() ? AESNI_ON : AESNI_OFF;
+    AesNi aesniFromCpu = Cpu::hasAES() ? AESNI_ON : AESNI_OFF;
     if (m_aesni == AESNI_AUTO || m_safe) {
         m_aesni = aesniFromCpu;
     }
 
-    Cpu::instance().optimizeParameters(m_threads, m_hashFactor, m_algo, m_maxCpuUsage, m_safe);
+    Cpu::optimizeParameters(m_threads, m_hashFactor, m_algo, m_maxCpuUsage, m_safe);
 }
 
 bool Options::parseCCUrl(const char* url)

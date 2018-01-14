@@ -64,7 +64,7 @@ App::App(int argc, char **argv) :
 {
     m_self = this;
 
-    Cpu::instance();
+    Cpu::init();
 
     m_options = Options::parse(argc, argv);
     if (!m_options) {

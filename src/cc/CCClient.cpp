@@ -82,14 +82,14 @@ CCClient::CCClient(Options* options, uv_async_t* async)
     m_clientStatus.setHashFactor(Mem::maxHashFactor());
 
     m_clientStatus.setVersion(Version::string());
-    m_clientStatus.setCpuBrand(Cpu::instance().brand());
-    m_clientStatus.setCpuAES(Cpu::instance().hasAES());
-    m_clientStatus.setCpuSockets(Cpu::instance().sockets());
-    m_clientStatus.setCpuCores(Cpu::instance().cores());
-    m_clientStatus.setCpuThreads(Cpu::instance().threads());
-    m_clientStatus.setCpuX64(Cpu::instance().isX64());
-    m_clientStatus.setCpuL2(Cpu::instance().l2());
-    m_clientStatus.setCpuL3(Cpu::instance().l3());
+    m_clientStatus.setCpuBrand(Cpu::brand());
+    m_clientStatus.setCpuAES(Cpu::hasAES());
+    m_clientStatus.setCpuSockets(Cpu::sockets());
+    m_clientStatus.setCpuCores(Cpu::cores());
+    m_clientStatus.setCpuThreads(Cpu::threads());
+    m_clientStatus.setCpuX64(Cpu::isX64());
+    m_clientStatus.setCpuL2(Cpu::l2());
+    m_clientStatus.setCpuL3(Cpu::l3());
     m_clientStatus.setCurrentThreads(m_options->threads());
 
     if (m_options->ccToken() != nullptr) {

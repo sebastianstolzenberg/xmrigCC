@@ -32,7 +32,7 @@
 void App::background()
 {
     if (m_options->affinity() != -1L) {
-        Cpu::instance().setAffinity(-1, m_options->affinity());
+        Cpu::setAffinity(-1, m_options->affinity());
     }
 
     if (m_options->background()) {

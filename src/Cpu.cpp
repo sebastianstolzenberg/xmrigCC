@@ -33,9 +33,10 @@
 #include "Cpu.h"
 #include "HwLoc.h"
 
-class CpuImpl : public Cpu
+class CpuImpl
 {
 public:
+    static CpuImpl& instance();
     CpuImpl();
     void init();
 
@@ -43,8 +44,8 @@ public:
                             int maxCpuUsage, bool safeMode);
     void setAffinity(int id, uint64_t mask);
 
-    bool hasAES()       { return (m_flags & AES) != 0; }
-    bool isX64()        { return (m_flags & X86_64) != 0; }
+    bool hasAES()       { return (m_flags & Cpu::AES) != 0; }
+    bool isX64()        { return (m_flags & Cpu::X86_64) != 0; }
     const char *brand() { return m_brand; }
     int cores()         { return m_totalCores; }
     int l2()            { return m_l2_cache; }
@@ -126,7 +127,7 @@ void testHwLoc() {
     //hwloc.distriburtOverCpus(hwloc.getNumberOfCores());
 }
 
-Cpu& Cpu::instance() {
+CpuImpl& CpuImpl::instance() {
     static CpuImpl cpu;
     return cpu;
 }
@@ -250,15 +251,15 @@ void CpuImpl::initCommon()
     }
 
 #   if defined(__x86_64__) || defined(_M_AMD64)
-    m_flags |= X86_64;
+    m_flags |= Cpu::X86_64;
 #   endif
 
     if (data.flags[CPU_FEATURE_AES]) {
-        m_flags |= AES;
+        m_flags |= Cpu::AES;
     }
 
     if (data.flags[CPU_FEATURE_BMI2]) {
-        m_flags |= BMI2;
+        m_flags |= Cpu::BMI2;
     }
 }
 
@@ -284,4 +285,65 @@ void CpuImpl::setAffinity(int id, uint64_t mask)
         sched_setaffinity(gettid(), sizeof(&set), &set);
 #       endif
     }
+}
+
+void Cpu::init()
+{
+    CpuImpl::instance().init();
+}
+
+void Cpu::optimizeParameters(size_t& threadsCount, size_t& hashFactor, Options::Algo algo,
+                               int maxCpuUsage, bool safeMode)
+{
+    CpuImpl::instance().optimizeParameters(threadsCount, hashFactor, algo, maxCpuUsage, safeMode);
+}
+
+void Cpu::setAffinity(int id, uint64_t mask)
+{
+    CpuImpl::instance().setAffinity(id, mask);
+}
+
+bool Cpu::hasAES()
+{
+    return CpuImpl::instance().hasAES();
+}
+
+bool Cpu::isX64()
+{
+    return CpuImpl::instance().isX64();
+}
+
+const char* Cpu::brand()
+{
+    return CpuImpl::instance().brand();
+}
+
+int Cpu::cores()
+{
+    return CpuImpl::instance().cores();
+}
+
+int Cpu::l2()
+{
+    return CpuImpl::instance().l2();
+}
+
+int Cpu::l3()
+{
+    return CpuImpl::instance().l3();
+}
+
+int Cpu::sockets()
+{
+    return CpuImpl::instance().sockets();
+}
+
+int Cpu::threads()
+{
+    return CpuImpl::instance().threads();
+}
+
+size_t Cpu::availableCache()
+{
+    return CpuImpl::instance().availableCache();
 }

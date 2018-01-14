@@ -38,26 +38,22 @@ public:
         BMI2   = 4
     };
 
-    static Cpu& instance();
-    virtual void init() = 0;
+    static void init();
 
-    virtual void optimizeParameters(size_t& threadsCount, size_t& hashFactor, Options::Algo algo,
-                                    int maxCpuUsage, bool safeMode) = 0;
+    static void optimizeParameters(size_t& threadsCount, size_t& hashFactor, Options::Algo algo,
+                                    int maxCpuUsage, bool safeMode);
 
-    virtual void setAffinity(int id, uint64_t mask) = 0;
+    static void setAffinity(int id, uint64_t mask);
 
-    virtual bool hasAES() = 0;
-    virtual bool isX64() = 0;
-    virtual const char *brand() = 0;
-    virtual int cores() = 0;
-    virtual int l2() = 0;
-    virtual int l3() = 0;
-    virtual int sockets() = 0;
-    virtual int threads() = 0;
-    virtual size_t availableCache() = 0;
-
-protected:
-    virtual ~Cpu() {}
+    static bool hasAES();
+    static bool isX64();
+    static const char *brand();
+    static int cores();
+    static int l2();
+    static int l3();
+    static int sockets();
+    static int threads();
+    static size_t availableCache();
 };
 
 
