@@ -35,7 +35,7 @@ int Mem::m_flags         = 0;
 int Mem::m_threads       = 0;
 size_t Mem::m_memorySize = 0;
 uint8_t *Mem::m_memory   = nullptr;
-int64_t Mem::m_doubleHashThreadMask = -1L;
+Mem::ThreadBitSet Mem::m_multiHashThreadMask = Mem::ThreadBitSet(-1L);
 
 cryptonight_ctx *Mem::create(int threadId)
 {

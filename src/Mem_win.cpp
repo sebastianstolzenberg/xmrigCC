@@ -149,7 +149,7 @@ bool Mem::allocate(const Options* options)
     m_algo       = options->algo();
     m_threads    = options->threads();
     m_doubleHash = options->doubleHash();
-    m_doubleHashThreadMask = options->doubleHashThreadMask();
+    m_multiHashThreadMask = Mem::ThreadBitSet(options->doubleHashThreadMask());
     m_memorySize = 0;
 
     size_t scratchPadSize = m_algo == Options::ALGO_CRYPTONIGHT ? MEMORY : MEMORY_LITE;

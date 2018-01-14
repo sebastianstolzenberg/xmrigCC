@@ -111,7 +111,7 @@ xmrigDaemon -o pool.minemonero.pro:5555 -u YOUR_WALLET -p x -k --cc-url=IP_OF_CC
   -k, --keepalive                       send keepalived for prevent timeout (need pool support)
   -r, --retries=N                       number of times to retry before switch to backup server (default: 5)
   -R, --retry-pause=N                   time to pause between retries (default: 5)
-      --doublehash-thread-mask          for av=2/4 only, limits doublehash to given threads (mask), (default: all threads)
+      --multihash-thread-mask          for av=2/4 only, limits doublehash to given threads (mask), (default: all threads)
       --cpu-affinity                    set process affinity to CPU core(s), mask 0x3 for cores 0 and 1
       --cpu-priority                    set process priority (0 idle, 2 normal to 5 highest)
       --no-huge-pages                   disable huge pages support
@@ -155,7 +155,7 @@ With this option you can limit doublehash to the given threads (mask). This can 
 ...
 
 "av":2,
-"doublehash-thread-mask":"0x5", // in binary -> 0101
+"multihash-thread-mask":"0x5", // in binary -> 0101
 "threads": 4,
 
 ...
