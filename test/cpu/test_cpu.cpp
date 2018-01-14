@@ -32,9 +32,10 @@ void setMockedCpu(size_t numProcessors, size_t numCores, size_t numPusPerCore, s
     Cpu::init();
 }
 
-std::pair<size_t, size_t> testOptimize(size_t numThreads, size_t hashFactor, Options::Algo algo, bool safeMode)
+std::pair<size_t, size_t> testOptimize(size_t numThreads, size_t hashFactor, Options::Algo algo, bool safeMode,
+                                       size_t maxCpuUsage = 100)
 {
-    Cpu::optimizeParameters(numThreads, hashFactor, algo, 100, safeMode);
+    Cpu::optimizeParameters(numThreads, hashFactor, algo, maxCpuUsage, safeMode);
     return std::pair<size_t, size_t>(numThreads, hashFactor);
 }
 
@@ -154,6 +155,14 @@ void test_cpu_optimizeparameters_p1_c4_v2_m8(void)
     TEST_ASSERT_EQUAL_UINT32(Cpu::availableCache(), L3_CACHE);
 
     TEST_ASSERT(Expected(4,1) == testOptimize(0, 0, Options::ALGO_CRYPTONIGHT, false));
+    TEST_ASSERT(Expected(4,1) == testOptimize(0, 0, Options::ALGO_CRYPTONIGHT, false, 80));
+    TEST_ASSERT(Expected(3,1) == testOptimize(0, 0, Options::ALGO_CRYPTONIGHT, false, 48));
+    TEST_ASSERT(Expected(3,1) == testOptimize(0, 0, Options::ALGO_CRYPTONIGHT, false, 38));
+    TEST_ASSERT(Expected(2,2) == testOptimize(0, 0, Options::ALGO_CRYPTONIGHT, false, 37));
+    TEST_ASSERT(Expected(2,2) == testOptimize(0, 0, Options::ALGO_CRYPTONIGHT, false, 25));
+    TEST_ASSERT(Expected(1,4) == testOptimize(0, 0, Options::ALGO_CRYPTONIGHT, false, 24));
+    TEST_ASSERT(Expected(1,4) == testOptimize(0, 0, Options::ALGO_CRYPTONIGHT, false, 1));
+    TEST_ASSERT(Expected(1,4) == testOptimize(0, 0, Options::ALGO_CRYPTONIGHT, false, 0));
     TEST_ASSERT(Expected(8,1) == testOptimize(0, 0, Options::ALGO_CRYPTONIGHT_LITE, false));
 
     TEST_ASSERT(Expected(1,4) == testOptimize(1, 0, Options::ALGO_CRYPTONIGHT, false));

@@ -127,7 +127,8 @@ void testHwLoc() {
     //hwloc.distriburtOverCpus(hwloc.getNumberOfCores());
 }
 
-CpuImpl& CpuImpl::instance() {
+CpuImpl& CpuImpl::instance()
+{
     static CpuImpl cpu;
     return cpu;
 }
@@ -140,8 +141,8 @@ CpuImpl::CpuImpl()
     , m_l3_cache(0)
     , m_sockets(1)
     , m_totalCores(0)
-    , m_totalThreads(0) {
-    init();
+    , m_totalThreads(0)
+{
 }
 
 void CpuImpl::init()
@@ -161,7 +162,7 @@ void CpuImpl::optimizeParameters(size_t& threadsCount, size_t& hashFactor,
 
     if (!safeMode && threadsCount > 0 && hashFactor > 0)
     {
-      // all parameters have been set manually, no optimization necessary
+      // all parameters have been set manually and safe mode is off ... no optimization necessary
       return;
     }
 
@@ -187,6 +188,7 @@ void CpuImpl::optimizeParameters(size_t& threadsCount, size_t& hashFactor,
         }
         if (hashFactor > maximumReasonableFactor / threadsCount) {
             hashFactor = std::min(maximumReasonableFactor / threadsCount, maximumReasonableHashFactor);
+            hashFactor   = std::max(hashFactor, static_cast<size_t>(1));
         }
     }
 
@@ -198,13 +200,16 @@ void CpuImpl::optimizeParameters(size_t& threadsCount, size_t& hashFactor,
             threadsCount = std::min(maximumReasonableThreadCount,
                                     maximumReasonableFactor / hashFactor);
         }
+        if (maxCpuUsage < 100)
+        {
+            threadsCount = std::min(threadsCount, m_totalThreads * maxCpuUsage / 100);
+        }
+        threadsCount = std::max(threadsCount, static_cast<size_t>(1));
     }
     if (hashFactor == 0) {
         hashFactor = std::min(maximumReasonableHashFactor, maximumReasonableFactor / threadsCount);
+        hashFactor   = std::max(hashFactor, static_cast<size_t>(1));
     }
-
-    threadsCount = std::max(threadsCount, 1ul);
-    hashFactor   = std::max(hashFactor, 1ul);
 }
 
 size_t CpuImpl::availableCache()
