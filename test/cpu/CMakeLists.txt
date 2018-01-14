@@ -6,11 +6,11 @@ set(SOURCES
 
 include_directories(../../src)
 
-add_executable(cpu_test ${SOURCES})
-target_link_libraries(cpu_test unity ${Hwloc_LIBRARIES} ${EXTRA_LIBS})
+add_executable(test_cpu ${SOURCES})
+target_link_libraries(test_cpu unity ${Hwloc_LIBRARIES} ${EXTRA_LIBS})
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -maes -fno-strict-aliasing")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2")
 add_definitions(-DBUILD_TEST)
 
-add_test(cpu_test cpu_test)
+add_test(test_cpu test_cpu)

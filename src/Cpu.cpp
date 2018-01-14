@@ -41,8 +41,6 @@ public:
 
     void optimizeParameters(size_t& threadsCount, size_t& hashFactor, Options::Algo algo,
                             int maxCpuUsage, bool safeMode);
-    size_t optimalThreadsCount(int algo, int hashFactor, int maxCpuUsage);
-    size_t optimalHashFactor(int algo, int threadsCount);
     void setAffinity(int id, uint64_t mask);
 
     bool hasAES()       { return (m_flags & AES) != 0; }
@@ -63,9 +61,9 @@ private:
     int m_flags;
     int m_l2_cache;
     int m_l3_cache;
-    int m_sockets;
-    int m_totalCores;
-    int m_totalThreads;
+    size_t m_sockets;
+    size_t m_totalCores;
+    size_t m_totalThreads;
 
     std::vector<hwloc_cpuset_t> m_theadDistribution;
 };
@@ -157,6 +155,9 @@ void CpuImpl::init()
 void CpuImpl::optimizeParameters(size_t& threadsCount, size_t& hashFactor,
                                  Options::Algo algo, int maxCpuUsage, bool safeMode)
 {
+    // limits hashfactor to maximum possible value defined by compiler flag
+    hashFactor = std::min(hashFactor, static_cast<size_t>(MAX_NUM_HASH_BLOCKS));
+
     if (!safeMode && threadsCount > 0 && hashFactor > 0)
     {
       // all parameters have been set manually, no optimization necessary
@@ -166,75 +167,43 @@ void CpuImpl::optimizeParameters(size_t& threadsCount, size_t& hashFactor,
     size_t cache = availableCache();
     size_t algoBlockSize;
     switch (algo) {
-        case Options::ALGO_CRYPTONIGHT:
-            algoBlockSize = 2048;
-            break;
         case Options::ALGO_CRYPTONIGHT_LITE:
             algoBlockSize = 1024;
+            break;
+        case Options::ALGO_CRYPTONIGHT:
+        default:
+            algoBlockSize = 2048;
             break;
     }
 
     size_t maximumReasonableFactor = std::max(cache / algoBlockSize, 1ul);
+    size_t maximumReasonableThreadCount = std::min(maximumReasonableFactor, m_totalThreads);
+    size_t maximumReasonableHashFactor = std::min(maximumReasonableFactor, static_cast<size_t>(MAX_NUM_HASH_BLOCKS));
+
     if (safeMode) {
-        if (threadsCount > maximumReasonableFactor) {
-            threadsCount = maximumReasonableFactor;
+        if (threadsCount > maximumReasonableThreadCount) {
+            threadsCount = maximumReasonableThreadCount;
         }
         if (hashFactor > maximumReasonableFactor / threadsCount) {
-            hashFactor = maximumReasonableFactor / threadsCount;
+            hashFactor = std::min(maximumReasonableFactor / threadsCount, maximumReasonableHashFactor);
         }
     }
 
     if (threadsCount == 0) {
-        threadsCount = maximumReasonableFactor;
+        if (hashFactor == 0) {
+            threadsCount = maximumReasonableThreadCount;
+        }
+        else {
+            threadsCount = std::min(maximumReasonableThreadCount,
+                                    maximumReasonableFactor / hashFactor);
+        }
     }
     if (hashFactor == 0) {
-        hashFactor = maximumReasonableFactor / threadsCount;
+        hashFactor = std::min(maximumReasonableHashFactor, maximumReasonableFactor / threadsCount);
     }
 
     threadsCount = std::max(threadsCount, 1ul);
     hashFactor   = std::max(hashFactor, 1ul);
-}
-
-size_t CpuImpl::optimalThreadsCount(int algo, int hashFactor, int maxCpuUsage)
-{
-    if (m_totalThreads == 1) {
-        return 1;
-    }
-
-    const size_t cache = availableCache();
-
-    if (hashFactor == 0) {
-        // hashFactor is set to auto, assumes smallest possible factor
-        hashFactor = 1;
-    }
-
-    int count = 0;
-    const int size = (algo ? 1024 : 2048) * hashFactor;
-
-    if (cache) {
-        count = cache / size;
-    }
-    else {
-        count = m_totalThreads / 2;
-    }
-
-    if (count > m_totalThreads) {
-        count = m_totalThreads;
-    }
-
-    if (((float) count / m_totalThreads * 100) > maxCpuUsage) {
-        count = (int) ceil((float) m_totalThreads * (maxCpuUsage / 100.0));
-    }
-
-    return count < 1 ? 1 : count;
-}
-
-size_t CpuImpl::optimalHashFactor(int algo, int threadsCount)
-{
-    const size_t algoSize = (algo ? 1024 : 2048);
-    const size_t cache = availableCache();
-
-    return std::min(cache / algoSize / threadsCount, static_cast<size_t>(MAX_NUM_HASH_BLOCKS));
 }
 
 size_t CpuImpl::availableCache()
@@ -298,7 +267,7 @@ void CpuImpl::setAffinity(int id, uint64_t mask)
     cpu_set_t set;
     CPU_ZERO(&set);
 
-    for (int i = 0; i < m_totalThreads; i++) {
+    for (size_t i = 0; i < m_totalThreads; i++) {
         if (mask & (1UL << i)) {
             CPU_SET(i, &set);
         }

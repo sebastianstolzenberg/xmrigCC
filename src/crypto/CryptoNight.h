@@ -47,7 +47,7 @@ class JobResult;
 class CryptoNight
 {
 public:
-    static bool init(int algo, int variant);
+    static bool init(int algo, bool aesni);
 
     static void hash(size_t factor, const uint8_t* input, size_t size, uint8_t* output, cryptonight_ctx* ctx);
 

@@ -44,8 +44,6 @@ public:
     virtual void optimizeParameters(size_t& threadsCount, size_t& hashFactor, Options::Algo algo,
                                     int maxCpuUsage, bool safeMode) = 0;
 
-    virtual size_t optimalThreadsCount(int algo, int hashFactor, int maxCpuUsage) = 0;
-    virtual size_t optimalHashFactor(int algo, int threadsCount) = 0;
     virtual void setAffinity(int id, uint64_t mask) = 0;
 
     virtual bool hasAES() = 0;

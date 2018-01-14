@@ -37,12 +37,6 @@ int Cpu::m_totalCores   = 0;
 int Cpu::m_totalThreads = 0;
 
 
-int Cpu::optimalThreadsCount(int algo, bool doubleHash, int maxCpuUsage)
-{
-    return m_totalThreads;
-}
-
-
 void Cpu::initCommon()
 {
     memcpy(m_brand, "Unknown", 7);

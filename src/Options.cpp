@@ -872,7 +872,7 @@ bool Options::setAlgo(const char *algo)
 void Options::optimizeAlgorithmConfiguration()
 {
     // backwards compatibility for configs still setting algo variant (av)
-    // av overrides mutli-hash and aesni when they are either not set or set to auto
+    // av overrides mutli-hash and aesni when they are either not set or when they are set to auto
     if (m_algoVariant != AV0_AUTO) {
         size_t hashFactor = m_hashFactor;
         AesNi aesni = m_aesni;

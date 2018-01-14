@@ -92,15 +92,9 @@ void setCryptoNightHashMethods<0>(Options::Algo algo, bool aesni)
     // template recursion abort
 };
 
-bool CryptoNight::init(int algo, int variant)
+bool CryptoNight::init(int algo, bool aesni)
 {
-    if (variant < 1 || variant  > 8)
-    {
-        return false;
-    }
-
-    setCryptoNightHashMethods<MAX_NUM_HASH_BLOCKS>(static_cast<Options::Algo>(algo), variant < 5);
-
+    setCryptoNightHashMethods<MAX_NUM_HASH_BLOCKS>(static_cast<Options::Algo>(algo), aesni);
     return selfTest(algo);
 }
 

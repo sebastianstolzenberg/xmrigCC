@@ -82,8 +82,8 @@ public:
     inline const char *ccCustomDashboard() const    { return m_ccCustomDashboard == nullptr ? "index.html" : m_ccCustomDashboard; }
     inline const std::vector<Url*> &pools() const   { return m_pools; }
     inline Algo algo() const                        { return m_algo; }
-    inline AlgoVariant algoVariant() const          { return m_algoVariant; }
-    inline AesNi aesni() const                      { return m_aesni; }
+//    inline AlgoVariant algoVariant() const          { return m_algoVariant; }
+    inline bool aesni() const                       { return m_aesni == AESNI_ON; }
     inline int hashFactor() const                   { return m_hashFactor; }
     inline int apiPort() const                      { return m_apiPort; }
     inline int donateLevel() const                  { return m_donateLevel; }

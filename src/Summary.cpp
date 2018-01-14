@@ -140,11 +140,11 @@ static void print_threads()
     }
 
     Log::i()->text(Options::i()->colors() ?
-                     "\x1B[01;32m * \x1B[01;37mTHREADS:      \x1B[01;36m%d\x1B[01;37m, %s, av=%d, hf=%zu, %sdonate=%d%%\x1B[01;37m%s%s" :
-                     " * THREADS:      %d, %s, av=%d, hf=%zu, %sdonate=%d%%\x1B[01;37m%s%s",
+                     "\x1B[01;32m * \x1B[01;37mTHREADS:      \x1B[01;36m%d\x1B[01;37m, %s, aes=%d, hf=%zu, %sdonate=%d%%\x1B[01;37m%s%s" :
+                     " * THREADS:      %d, %s, aes=%d, hf=%zu, %sdonate=%d%%\x1B[01;37m%s%s",
                    Options::i()->threads(),
                    Options::i()->algoName(),
-                   Options::i()->algoVariant(),
+                   Options::i()->aesni(),
                    Options::i()->hashFactor(),
                    Options::i()->colors() && Options::i()->donateLevel() == 0 ? "\x1B[01;31m" : "",
                    Options::i()->donateLevel(),
