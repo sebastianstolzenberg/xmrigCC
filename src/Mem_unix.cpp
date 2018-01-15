@@ -49,7 +49,6 @@ bool Mem::allocate(const Options* options)
     size_t scratchPadSize = m_algo == Options::ALGO_CRYPTONIGHT ? MEMORY : MEMORY_LITE;
     for (int i=0; i < m_threads; i++) {
         m_memorySize += sizeof(cryptonight_ctx);
-
         m_memorySize += scratchPadSize * m_hashFactor;
     }
 
