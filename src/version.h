@@ -68,8 +68,14 @@
 #   endif
 #include <string>
 #else
-#include <string.h>
+    #if defined(__FreeBSD__)
+        #include <string>
+    #else
+        #include <string.h>
+    #endif
 #endif
+
+
 
 
 class Version
