@@ -171,8 +171,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 find_package(UV REQUIRED)
 find_package(Hwloc REQUIRED)
 
-#find_package(Boost REQUIRED chrono system)
-
 include(cmake/flags.cmake)
 
 set(SOURCES_HWLOC src/HwLoc.cpp)
@@ -265,14 +263,30 @@ include_directories(src/3rdparty)
 include_directories(${UV_INCLUDE_DIR})
 include_directories(${Hwloc_INCLUDE_DIRS})
 
-add_executable(xmrigMiner ${HEADERS} ${SOURCES} ${HEADERS_COMMON} ${SOURCES_COMMON} ${SOURCES_OS} ${SOURCES_CPUID} ${SOURCES_HWLOC} ${HEADERS_CRYPTO} ${SOURCES_CRYPTO} ${SOURCES_SYSLOG} ${HTTPD_SOURCES} ${SOURCES_CC_COMMON} ${HEADERS_CC_COMMON} ${SOURCES_CC_CLIENT} ${HEADERS_CC_CLIENT})
-target_link_libraries(xmrigMiner ${UV_LIBRARIES} ${MHD_LIBRARY} ${EXTRA_LIBS} ${CPUID_LIB} ${Hwloc_LIBRARIES}) #Boost::chrono Boost::system)
+add_library(xmrig_common STATIC ${SOURCES_COMMON})
+add_library(xmrig_os_dependencies STATIC ${SOURCES_OS})
+add_library(xmrig_cpuid STATIC ${SOURCES_CPUID} ${SOURCES_HWLOC})
+add_library(xmrig_syslog STATIC ${SOURCES_SYSLOG})
+if (WITH_CC_SERVER OR WITH_CC_CLIENT)
+    add_library(xmrig_cc_common STATIC ${SOURCES_CC_COMMON})
+endif (WITH_CC_SERVER OR WITH_CC_CLIENT)
+
+add_executable(xmrigMiner ${SOURCES} ${SOURCES_CRYPTO} ${HTTPD_SOURCES} ${SOURCES_CC_CLIENT})
+target_link_libraries(xmrigMiner
+        xmrig_common xmrig_cpuid xmrig_os_dependencies xmrig_syslog
+        ${UV_LIBRARIES} ${MHD_LIBRARY} ${EXTRA_LIBS} ${CPUID_LIB} ${Hwloc_LIBRARIES})
+if (WITH_CC_CLIENT)
+    target_link_libraries(xmrigMiner xmrig_cc_common)
+endif (WITH_CC_CLIENT)
+
 
 add_executable(xmrigDaemon src/cc/XMRigd.cpp res/app.rc)
 
 if (WITH_CC_SERVER AND MHD_FOUND)
-    add_executable(xmrigCCServer ${HEADERS_COMMON} ${SOURCES_COMMON} ${SOURCES_OS} ${SOURCES_CPUID} ${SOURCES_HWLOC} ${SOURCES_SYSLOG} ${SOURCES_CC_COMMON} ${HEADERS_CC_COMMON} ${SOURCES_CC_SERVER} ${HEADERS_CC_SERVER})
-    target_link_libraries(xmrigCCServer ${UV_LIBRARIES} ${MHD_LIBRARY} ${EXTRA_LIBS} ${CPUID_LIB} ${Hwloc_LIBRARIES}) #Boost::chrono Boost::system)
+    add_executable(xmrigCCServer ${SOURCES_CC_SERVER})
+    target_link_libraries(xmrigCCServer
+            xmrig_common xmrig_cpuid xmrig_os_dependencies xmrig_syslog xmrig_cc_common
+            ${UV_LIBRARIES} ${MHD_LIBRARY} ${EXTRA_LIBS} ${CPUID_LIB} ${Hwloc_LIBRARIES})
     set_target_properties(xmrigCCServer PROPERTIES COMPILE_FLAGS "-DXMRIG_CC_SERVER ${SHARED_FLAGS}")
 endif()
 

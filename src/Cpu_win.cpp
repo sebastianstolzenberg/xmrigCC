@@ -28,8 +28,7 @@
 #include "Cpu.h"
 
 
-/*
-void Cpu::init()
+void CpuImpl::init()
 {
 #   ifdef XMRIG_NO_LIBCPUID
     SYSTEM_INFO sysinfo;
@@ -40,10 +39,9 @@ void Cpu::init()
 
     initCommon();
 }
-*/
 
 
-void Cpu::setAffinity(int id, uint64_t mask)
+void CpuImpl::setAffinity(int id, uint64_t mask)
 {
     if (id == -1) {
         SetProcessAffinityMask(GetCurrentProcess(), mask);

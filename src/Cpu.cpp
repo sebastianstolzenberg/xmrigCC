@@ -5,6 +5,7 @@
  * Copyright 2014-2016 Wolf9466    <https://github.com/OhGodAPet>
  * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
  * Copyright 2016-2017 XMRig       <support@xmrig.com>
+ * Copyright 2018      Sebastian Stolzenberg <https://github.com/sebastianstolzenberg>
  *
  *
  *   This program is free software: you can redistribute it and/or modify
@@ -31,43 +32,10 @@
 #include <iostream>
 
 #include "Cpu.h"
+#include "CpuImpl.h"
 #include "HwLoc.h"
 
-class CpuImpl
-{
-public:
-    static CpuImpl& instance();
-    CpuImpl();
-    void init();
 
-    void optimizeParameters(size_t& threadsCount, size_t& hashFactor, Options::Algo algo,
-                            int maxCpuUsage, bool safeMode);
-    void setAffinity(int id, uint64_t mask);
-
-    bool hasAES()       { return (m_flags & Cpu::AES) != 0; }
-    bool isX64()        { return (m_flags & Cpu::X86_64) != 0; }
-    const char *brand() { return m_brand; }
-    int cores()         { return m_totalCores; }
-    int l2()            { return m_l2_cache; }
-    int l3()            { return m_l3_cache; }
-    int sockets()       { return m_sockets; }
-    int threads()       { return m_totalThreads; }
-    size_t availableCache();
-
-private:
-    void initCommon();
-
-    bool m_l2_exclusive;
-    char m_brand[64];
-    int m_flags;
-    int m_l2_cache;
-    int m_l3_cache;
-    size_t m_sockets;
-    size_t m_totalCores;
-    size_t m_totalThreads;
-
-    std::vector<hwloc_cpuset_t> m_theadDistribution;
-};
 
 void testHwLoc() {
     hwloc::HwLoc hwloc;
@@ -145,15 +113,6 @@ CpuImpl::CpuImpl()
 {
 }
 
-void CpuImpl::init()
-{
-#   ifdef XMRIG_NO_LIBCPUID
-    m_totalThreads = sysconf(_SC_NPROCESSORS_CONF);
-#   endif
-
-    initCommon();
-}
-
 void CpuImpl::optimizeParameters(size_t& threadsCount, size_t& hashFactor,
                                  Options::Algo algo, int maxCpuUsage, bool safeMode)
 {
@@ -210,6 +169,16 @@ void CpuImpl::optimizeParameters(size_t& threadsCount, size_t& hashFactor,
         hashFactor = std::min(maximumReasonableHashFactor, maximumReasonableFactor / threadsCount);
         hashFactor   = std::max(hashFactor, static_cast<size_t>(1));
     }
+}
+
+bool CpuImpl::hasAES()
+{
+    return (m_flags & Cpu::AES) != 0;
+}
+
+bool CpuImpl::isX64()
+{
+    return (m_flags & Cpu::X86_64) != 0;
 }
 
 size_t CpuImpl::availableCache()
@@ -277,6 +246,11 @@ void Cpu::optimizeParameters(size_t& threadsCount, size_t& hashFactor, Options::
                                int maxCpuUsage, bool safeMode)
 {
     CpuImpl::instance().optimizeParameters(threadsCount, hashFactor, algo, maxCpuUsage, safeMode);
+}
+
+void Cpu::setAffinity(int id, uint64_t mask)
+{
+    CpuImpl::instance().setAffinity(id, mask);
 }
 
 bool Cpu::hasAES()

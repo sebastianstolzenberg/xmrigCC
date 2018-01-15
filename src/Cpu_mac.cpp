@@ -30,16 +30,16 @@
 #include "Cpu.h"
 
 
-/*void Cpu::init()
+void CpuImpl::init()
 {
 #   ifdef XMRIG_NO_LIBCPUID
     m_totalThreads = sysconf(_SC_NPROCESSORS_CONF);
 #   endif
 
     initCommon();
-}*/
+}
 
 
-void Cpu::setAffinity(int id, uint64_t mask)
+void CpuImpl::setAffinity(int id, uint64_t mask)
 {
 }
