@@ -290,4 +290,4 @@ if (WITH_CC_SERVER AND MHD_FOUND)
     set_target_properties(xmrigCCServer PROPERTIES COMPILE_FLAGS "-DXMRIG_CC_SERVER ${SHARED_FLAGS}")
 endif()
 
-add_subdirectory(test)
+add_subdirectory(test EXCLUDE_FROM_ALL)
