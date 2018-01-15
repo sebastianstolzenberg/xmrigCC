@@ -33,67 +33,6 @@
 
 #include "Cpu.h"
 #include "CpuImpl.h"
-#include "HwLoc.h"
-
-
-
-void testHwLoc() {
-    hwloc::HwLoc hwloc;
-
-    std::cout << std::endl << "---------------------------------------------------" << std::endl;
-    std::cout             << "HWLOC: Analyzing Caches" << std::endl;
-    auto caches = hwloc.getCaches(3);
-    std::cout             << "HWLOC: found " << caches.size()
-                          << " L3 Cache(s)" << std::endl;
-    if (caches.empty()) {
-        caches = hwloc.getCaches(2);
-        std::cout         << "HWLOC: found " << caches.size() << " L2 Cache(s)" << std::endl;
-    }
-    for (auto cache : caches) {
-        std::cout         << "HWLOC: |-" << cache.toString() << std::endl;
-        auto cores = cache.cores();
-        std::cout         << "HWLOC: | |has " << cores.size()
-                          << " core(s)" << std::endl;
-        for (auto core : cache.cores()) {
-            std::cout     << "HWLOC: | |-" << core.toString() << std::endl;
-            auto processingUnits = core.processingUnits();
-            std::cout     << "HWLOC: | | |has " << processingUnits.size()
-                          << " processing unit(s)" << std::endl;
-            for (auto pu : processingUnits) {
-                std::cout << "HWLOC: | | | -" << pu.toString() << std::endl;
-            }
-        }
-    }
-    std::cout << "---------------------------------------------------" << std::endl << std::endl;
-
-    std::cout << "---------------------------------------------------" << std::endl;
-    std::cout             << "HWLOC: Analyzing Cores" << std::endl;
-    auto cores = hwloc.getCores();
-    std::cout             << "HWLOC: found " << cores.size()
-                          << " Core(s)" << std::endl;
-    for (auto core : cores) {
-        std::cout         << "HWLOC: |-" << core.toString() << std::endl;
-        auto processingUnits = core.processingUnits();
-        std::cout         << "HWLOC: | |has " << processingUnits.size()
-                          << " processingUnit(s)" << std::endl;
-        for (auto pu : core.processingUnits()) {
-            std::cout     << "HWLOC: | |-" << pu.toString() << std::endl;
-        }
-    }
-    std::cout << "---------------------------------------------------" << std::endl << std::endl;
-
-    std::cout << "---------------------------------------------------" << std::endl;
-    std::cout             << "HWLOC: Analyzing Processing Units" << std::endl;
-    auto processingUnits = hwloc.getProcessingUnits();
-    std::cout             << "HWLOC: found " << processingUnits.size()
-                          << " Processing Unit(s)" << std::endl;
-    for (auto pu : processingUnits) {
-        std::cout         << "HWLOC: |-" << pu.toString() << std::endl;
-    }
-    std::cout << "---------------------------------------------------" << std::endl << std::endl;
-
-    //hwloc.distriburtOverCpus(hwloc.getNumberOfCores());
-}
 
 CpuImpl& CpuImpl::instance()
 {
@@ -195,8 +134,6 @@ size_t CpuImpl::availableCache()
 
 void CpuImpl::initCommon()
 {
-    // testHwLoc();
-
     struct cpu_raw_data_t raw = { 0 };
     struct cpu_id_t data = { 0 };
 

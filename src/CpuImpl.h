@@ -62,8 +62,6 @@ private:
     size_t m_sockets;
     size_t m_totalCores;
     size_t m_totalThreads;
-
-//    std::vector<hwloc_cpuset_t> m_theadDistribution;
 };
 
 #endif /* __CPU_IMPL_H__ */
