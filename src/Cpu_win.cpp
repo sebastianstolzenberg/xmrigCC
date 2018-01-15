@@ -28,6 +28,7 @@
 #include "Cpu.h"
 
 
+/*
 void Cpu::init()
 {
 #   ifdef XMRIG_NO_LIBCPUID
@@ -39,6 +40,7 @@ void Cpu::init()
 
     initCommon();
 }
+*/
 
 
 void Cpu::setAffinity(int id, uint64_t mask)

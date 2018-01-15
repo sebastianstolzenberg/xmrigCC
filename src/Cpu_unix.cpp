@@ -54,12 +54,12 @@ typedef cpuset_t cpu_set_t;
 }*/
 
 
-/*void Cpu::setAffinity(int id, uint64_t mask)
+void Cpu::setAffinity(int id, uint64_t mask)
 {
     cpu_set_t set;
     CPU_ZERO(&set);
 
-    for (int i = 0; i < m_totalThreads; i++) {
+    for (int i = 0; i < Cpu::threads(); i++) {
         if (mask & (1UL << i)) {
             CPU_SET(i, &set);
         }
@@ -76,4 +76,4 @@ typedef cpuset_t cpu_set_t;
         sched_setaffinity(gettid(), sizeof(&set), &set);
 #       endif
     }
-}*/
+}
