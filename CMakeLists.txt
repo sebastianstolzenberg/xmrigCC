@@ -15,56 +15,6 @@ set(MAX_NUM_HASH_BLOCKS 8)
 include (CheckIncludeFile)
 include (cmake/cpu.cmake)
 
-
-set(HEADERS
-    src/3rdparty/align.h
-    src/api/Api.h
-    src/api/ApiState.h
-    src/api/NetworkState.h
-    src/App.h
-    src/interfaces/IClientListener.h
-    src/interfaces/IJobResultListener.h
-    src/interfaces/ILogBackend.h
-    src/interfaces/IStrategy.h
-    src/interfaces/IStrategyListener.h
-    src/interfaces/IWorker.h
-    src/net/Client.h
-    src/net/Job.h
-    src/net/JobId.h
-    src/net/JobResult.h
-    src/net/Network.h
-    src/net/strategies/DonateStrategy.h
-    src/net/strategies/FailoverStrategy.h
-    src/net/strategies/SinglePoolStrategy.h
-    src/net/SubmitResult.h
-    src/version.h
-    src/workers/MultiWorker.h
-    src/workers/Handle.h
-    src/workers/Hashrate.h
-    src/workers/Worker.h
-    src/workers/Workers.h
-   )
-
-set(HEADERS_CRYPTO
-    src/crypto/c_blake256.h
-    src/crypto/c_groestl.h
-    src/crypto/c_jh.h
-    src/crypto/c_keccak.h
-    src/crypto/c_skein.h
-    src/crypto/CryptoNight.h
-    src/crypto/CryptoNight_test.h
-    src/crypto/groestl_tables.h
-    src/crypto/hash.h
-    src/crypto/skein_port.h
-    src/crypto/soft_aes.h
-   )
-
-if (XMRIG_ARM)
-    set(HEADERS_CRYPTO "${HEADERS_CRYPTO}" src/crypto/CryptoNight_arm.h)
-else()
-    set(HEADERS_CRYPTO "${HEADERS_CRYPTO}" src/crypto/CryptoNight_x86.h)
-endif()
-
 set(SOURCES
     src/api/Api.cpp
     src/api/ApiState.cpp
@@ -94,20 +44,6 @@ set(SOURCES_CRYPTO
     src/crypto/c_skein.c
     src/crypto/CryptoNight.cpp
    )
-
-set(HEADERS_COMMON
-    src/interfaces/IConsoleListener.h
-    src/Console.h
-    src/Mem.h
-    src/Cpu.h
-        src/net/Url.h
-    src/Options.h
-    src/log/ConsoleLog.h
-    src/log/FileLog.h
-    src/log/Log.h
-    src/Platform.h
-    src/Summary.h
-)
 
 set(SOURCES_COMMON
     src/Console.cpp
@@ -220,11 +156,6 @@ if (WITH_CC_SERVER)
         message(FATAL_ERROR "microhttpd NOT found: use `-DWITH_CC=OFF` to build without CC Server support")
     endif()
 
-    set(HEADERS_CC_SERVER
-            src/cc/CCServer.h
-            src/cc/Service.h
-            src/cc/Httpd.h)
-
     set(SOURCES_CC_SERVER
             src/cc/CCServer.cpp
             src/cc/Service.cpp
@@ -235,18 +166,11 @@ if (WITH_CC_SERVER)
 endif()
 
 if (WITH_CC_CLIENT)
-    set(HEADERS_CC_CLIENT
-            src/cc/CCClient.h)
-
     set(SOURCES_CC_CLIENT
             src/cc/CCClient.cpp)
 endif()
 
 if (WITH_CC_SERVER OR WITH_CC_CLIENT)
-    set(HEADERS_CC_COMMON
-            src/cc/ControlCommand.h
-            src/cc/ClientStatus.h)
-
     set(SOURCES_CC_COMMON
             src/cc/ControlCommand.cpp
             src/cc/ClientStatus.cpp)
