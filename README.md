@@ -143,8 +143,30 @@ xmrigDaemon -o pool.minemonero.pro:5555 -u YOUR_WALLET -p x -k --cc-url=IP_OF_CC
 
 Also you can use configuration via config file, default **[config.json](https://github.com/Bendr0id/xmrigCC/wiki/Config-XMRigDaemon)**. You can load multiple config files and combine it with command line options.
 
+## Multihash (multihash-factor)
+With this option it is possible to increase the number of hashblocks calculated by a single thread in each round.
+Selecting multihash-factors greater than 1 increases the L3 cache demands relative to the multihash-factor.
+E.g. at multihash-factor 2, each Cryptonight thread requires 4MB and each Cryptonight-lite thread requires 2 MB of L3 cache.
+With multihash-factor 3, they need 6MB or 3MB respectively.
+
+Setting multihash-factor to 0 will allow automatic detection of the optimal value.
+Xmrig will then try to utilize as much of the L3 cache as possible for the selected number of threads.
+If the threads parameter has been set to auto, Xmrig will detect the optimal number of threads first.
+After that it finds the greatest possible multihash-factor.
+
+### Multihash for low power operation
+Depending the CPU and its L3 caches, it can make sense to replace multiple single hash threads with single multi-hash counterparts.
+This change might come at the price of a minor drop in effective hash-rate, yet it will also reduce heat production and power consumption of the used CPU.
+
+### Multihash for optimal CPU exploitation
+In certain environments (e.g. vServer) the system running xmrig can have access to relatively large amounts of L3 cache, but may has access to only a few CPU cores.
+In such cases, running xmrig with higher multihash-factors can lead to improvements.
+
+
 ## Multihash thread Mask (only for multihash-factor > 1)
-With this option you can limit multihash to the given threads (mask). This can significantly improve your hashrate by using unused l3 cache. The default is to run av2/av4 mode on all threads.
+With this option you can limit multihash to the given threads (mask).
+This can significantly improve your hashrate by using unused l3 cache.
+The default is to run the configured multihash-factor on all threads.
 
 
 ```
@@ -190,13 +212,18 @@ This will limit multihash mode (multihash-factor = 2) to thread 0 and thread 2, 
 
 
 ### CPU mining performance
-Please note performance is highly dependent on system load. The numbers above are obtained on an idle system. Tasks heavily using a processor cache, such as video playback, can greatly degrade hashrate. Optimal number of threads depends on the size of the L3 cache of a processor, 1 thread requires 2 MB (Cryptonight) or 1MB (Cryptonigh-Lite) of cache.
+Please note performance is highly dependent on system load.
+The numbers above are obtained on an idle system.
+Tasks heavily using a processor cache, such as video playback, can greatly degrade hashrate.
+Optimal number of threads depends on the size of the L3 cache of a processor, 1 thread requires 2 MB (Cryptonight) or 1MB (Cryptonigh-Lite) of cache.
 
 ### Maximum performance checklist
 * Idle operating system.
 * Do not exceed optimal thread count.
 * Use modern CPUs with AES-NI instruction set.
 * Try setup optimal cpu affinity.
+* Try decreasing number of threads while increasing multihash-factor.
+  Allocate unused cores and L3 cache with the help of multihash-thread-mask.
 * Enable fast memory (Large/Huge pages).
 
 ## Donations
