@@ -105,7 +105,7 @@ static void print_threads()
         };
 
         for (int i=0; i < Options::i()->threads(); i++) {
-            if (Mem::hashFactor(i) > 1) {
+            if (Mem::getThreadHashFactor(i) > 1) {
                 addThread(multiThreads, i);
             }
             else {

@@ -21,9 +21,6 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-//#include <iostream>
-//#include <boost/chrono.hpp>
-
 #include "crypto/CryptoNight.h"
 
 #if defined(XMRIG_ARM)
@@ -100,15 +97,7 @@ bool CryptoNight::init(int algo, bool aesni)
 
 void CryptoNight::hash(size_t factor, const uint8_t* input, size_t size, uint8_t* output, cryptonight_ctx* ctx)
 {
-//  boost::chrono::high_resolution_clock::time_point timeBeforeWrite =
-//      boost::chrono::high_resolution_clock::now();
-
   cryptonight_hash_ctx[factor-1](input, size, output, ctx);
-
-//  int32_t timeHashDone =
-//      boost::chrono::duration_cast<boost::chrono::microseconds>(
-//          boost::chrono::high_resolution_clock::now() - timeBeforeWrite).count();
-//  std::cout << "Single hash time = " << timeHashDone << "us" << std::endl;
 }
 
 bool CryptoNight::selfTest(int algo)

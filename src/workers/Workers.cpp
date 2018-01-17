@@ -151,7 +151,7 @@ void Workers::submit(const JobResult &result, int threadId)
 void Workers::onReady(void *arg)
 {
     auto handle = static_cast<Handle*>(arg);
-    handle->setWorker(createMultiWorker(Mem::hashFactor(handle->threadId()), handle));
+    handle->setWorker(createMultiWorker(Mem::getThreadHashFactor(handle->threadId()), handle));
     handle->worker()->start();
 }
 

@@ -161,6 +161,7 @@ static struct option const options[] = {
     { "cc-client-config-folder",    1, nullptr, 4009 },
     { "cc-custom-dashboard",        1, nullptr, 4010 },
     { "daemonized",       0, nullptr, 4011 },
+    { "doublehash-thread-mask",     1, nullptr, 4013 },
     { "multihash-thread-mask",     1, nullptr, 4013 },
     { nullptr, 0, nullptr, 0 }
 };
@@ -186,6 +187,7 @@ static struct option const config_options[] = {
     { "syslog",        0, nullptr, 'S'  },
     { "threads",       1, nullptr, 't'  },
     { "user-agent",    1, nullptr, 1008 },
+    { "doublehash-thread-mask",     1, nullptr, 4013 },
     { "multihash-thread-mask",     1, nullptr, 4013 },
     { nullptr, 0, nullptr, 0 }
 };

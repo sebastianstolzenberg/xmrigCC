@@ -49,8 +49,8 @@ public:
     static cryptonight_ctx *create(int threadId);
     static void release();
 
-    static inline int maxHashFactor()         { return m_hashFactor; }
-    static inline int hashFactor(int threadId)
+    static inline int hashFactor()         { return m_hashFactor; }
+    static inline int getThreadHashFactor(int threadId)
     {
         return (m_multiHashThreadMask.all() ||
                 m_multiHashThreadMask.test(threadId)) ? m_hashFactor : 1;

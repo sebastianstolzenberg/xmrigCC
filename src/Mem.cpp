@@ -44,7 +44,7 @@ cryptonight_ctx *Mem::create(int threadId)
     size_t offset = 0;
     for (int i=0; i < threadId; i++) {
         offset += sizeof(cryptonight_ctx);
-        offset += scratchPadSize * hashFactor(i);
+        offset += scratchPadSize * getThreadHashFactor(i);
     }
 
     auto* ctx = reinterpret_cast<cryptonight_ctx *>(&m_memory[offset]);
