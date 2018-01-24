@@ -32,6 +32,8 @@ set(SOURCES
     src/workers/Hashrate.cpp
     src/workers/Worker.cpp
     src/workers/Workers.cpp
+    src/Options.cpp
+    src/Platform.cpp
     src/xmrig.cpp
    )
 
@@ -48,12 +50,11 @@ set(SOURCES_COMMON
     src/Console.cpp
     src/Mem.cpp
     src/net/Url.cpp
-    src/Options.cpp
     src/log/ConsoleLog.cpp
     src/log/FileLog.cpp
     src/log/Log.cpp
-    src/Platform.cpp
     src/Cpu.cpp
+    src/HwLoc.cpp
    )
 
 if (WIN32)
@@ -103,6 +104,7 @@ add_definitions(/DUNICODE)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
 find_package(UV REQUIRED)
+find_package(Hwloc REQUIRED)
 
 include(cmake/flags.cmake)
 
@@ -161,6 +163,8 @@ if (WITH_CC_SERVER)
             src/cc/Summary.cpp
             src/cc/Httpd.cpp
             src/cc/XMRigCC.cpp
+            src/Options.cpp
+            src/Platform.cpp
             )
 endif()
 
@@ -201,12 +205,10 @@ endif (WITH_CC_CLIENT)
 add_executable(xmrigDaemon src/cc/XMRigd.cpp res/app.rc)
 
 if (WITH_CC_SERVER AND MHD_FOUND)
-    add_library(xmrig_common_cc STATIC ${SOURCES_COMMON})
     add_executable(xmrigCCServer ${SOURCES_CC_SERVER} res/app.rc)
     target_link_libraries(xmrigCCServer
-            xmrig_common_cc xmrig_os_dependencies xmrig_cpuid xmrig_cc_common
+            xmrig_common xmrig_os_dependencies xmrig_cpuid xmrig_cc_common
             ${UV_LIBRARIES} ${MHD_LIBRARY} ${EXTRA_LIBS} ${CPUID_LIB})
-    set_target_properties(xmrig_common_cc PROPERTIES COMPILE_FLAGS "-DXMRIG_CC_SERVER ${SHARED_FLAGS}")
     set_target_properties(xmrigCCServer PROPERTIES COMPILE_FLAGS "-DXMRIG_CC_SERVER ${SHARED_FLAGS}")
 endif()
 

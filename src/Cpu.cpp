@@ -142,6 +142,11 @@ void Cpu::optimizeParameters(size_t& threadsCount, size_t& hashFactor, Options::
     CpuImpl::instance().optimizeParameters(threadsCount, hashFactor, algo, maxCpuUsage, safeMode);
 }
 
+std::vector<ProcessingUnit::Ptr> Cpu::getDistributedProcessingUnits(size_t numThreads)
+{
+     return std::vector<ProcessingUnit::Ptr>();
+}
+
 void Cpu::setAffinity(int id, uint64_t mask)
 {
     CpuImpl::instance().setAffinity(id, mask);

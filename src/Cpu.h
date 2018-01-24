@@ -25,8 +25,25 @@
 #define __CPU_H__
 
 #include <cstdint>
+#include <vector>
+#include <memory>
 
 #include "Options.h"
+
+class ProcessingUnit
+{
+public:
+    typedef std::shared_ptr<ProcessingUnit> Ptr;
+protected:
+    virtual ~ProcessingUnit() {}
+
+public:
+    /// Binds current thread to this ProcessingUnit
+    virtual void bindThread() = 0;
+
+    /// Allocates page-aligned memory bound to this ProcessingUnit's NUMA core
+    virtual void* allocMemBind(size_t len) = 0;
+};
 
 class Cpu
 {
@@ -41,6 +58,8 @@ public:
 
     static void optimizeParameters(size_t& threadsCount, size_t& hashFactor, Options::Algo algo,
                                     size_t maxCpuUsage, bool safeMode);
+
+    static std::vector<ProcessingUnit::Ptr> getDistributedProcessingUnits(size_t numThreads);
 
     static void setAffinity(int id, uint64_t mask);
 
