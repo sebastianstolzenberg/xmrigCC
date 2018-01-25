@@ -1,5 +1,4 @@
 #include <unity.h>
-#include <libcpuid.h>
 #include <iostream>
 
 #include "HwLoc.h"

@@ -75,7 +75,7 @@ void CpuImpl::optimizeParameters(size_t& threadsCount, size_t& hashFactor,
             break;
     }
 
-    size_t maximumReasonableFactor = std::max(cache / algoBlockSize, static_cast<size_t>(1ul));
+     size_t maximumReasonableFactor = std::max(cache / algoBlockSize, static_cast<size_t>(1ul));
     size_t maximumReasonableThreadCount = std::min(maximumReasonableFactor, m_totalThreads);
     size_t maximumReasonableHashFactor = std::min(maximumReasonableFactor, static_cast<size_t>(MAX_NUM_HASH_BLOCKS));
 

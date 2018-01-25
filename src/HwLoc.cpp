@@ -336,4 +336,5 @@ void HwLoc::distributeOverCpus(size_t numThreads)
 bool HwLoc::initialized() const {
     return isTopologySet();
 }
-}
+
+} //namespace hwloc
