@@ -73,6 +73,7 @@ CpuSet::CpuSet(const Topology &topo, hwloc_cpuset_t cpuSet) :
 void CpuSet::bindThread()
 {
     //TODO test with HWLOC_CPUBIND_STRICT
+    hwloc_bitmap_singlify(m_hwLocCpuSet);
     hwloc_set_cpubind(topology(), m_hwLocCpuSet, HWLOC_CPUBIND_THREAD);
 }
 
@@ -354,17 +355,18 @@ std::vector<CpuSet> HwLoc::getDistributedCpuSets(size_t num)
 
     hwloc_cpuset_t distributedCpus[num];
     hwloc_obj_t roots[1] = {hwloc_get_root_obj(topology())};
-    hwloc_distrib(topology(), roots, 1, distributedCpus, num, INT_MAX, 0);
-
-    for (size_t i=0; i<num; ++i) {
-        pus.push_back(CpuSet(sharedTopology(), distributedCpus[i]));
+    if (0 == hwloc_distrib(topology(), roots, 1, distributedCpus, num, INT_MAX, 0)) {
+        char buffer[1024];
+        std::cout << "CPU binding";
+        for (size_t i = 0; i < num; ++i) {
+            hwloc_bitmap_singlify(distributedCpus[i]);
+            hwloc_bitmap_snprintf(buffer, sizeof(buffer), distributedCpus[i]);
+            std::cout << ", thread " << i << " : " << buffer;
+            pus.push_back(CpuSet(sharedTopology(), distributedCpus[i]));
+        }
+        std::cout << std::endl;
     }
-
-    char buffer[1024];
-    for (size_t i = 0; i < num; ++i) {
-        hwloc_bitmap_snprintf(buffer, sizeof(buffer), distributedCpus[i]);
-        std::cout << "CPU " << i << " : " << buffer << std::endl;
-    }
+    return pus;
 }
 
 void HwLoc::distributeOverCpus(size_t numThreads)
