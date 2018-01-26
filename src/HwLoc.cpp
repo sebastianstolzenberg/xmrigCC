@@ -29,6 +29,8 @@
 
 namespace hwloc {
 
+    //TODO check for mem leaks -> hwloc_bitmap etc.
+
 // ------------------------------------------------------------------------
 TopologySharer::TopologySharer()
 {
@@ -58,6 +60,26 @@ hwloc_topology_t TopologySharer::topology()
     return m_topology.get();
 }
 
+// ------------------------------------------------------------------------
+CpuSet::CpuSet(const Topology &topo, hwloc_cpuset_t cpuSet) :
+        TopologySharer(topo),
+        m_hwLocCpuSet(cpuSet)
+{
+    if (cpuSet == nullptr) {
+        std::cout << "ERR: cpuSet is null";
+    }
+}
+
+void CpuSet::bindThread()
+{
+    //TODO test with HWLOC_CPUBIND_STRICT
+    hwloc_set_cpubind(topology(), m_hwLocCpuSet, HWLOC_CPUBIND_THREAD);
+}
+
+void* CpuSet::allocMemBind(size_t len)
+{
+    return hwloc_alloc_membind(topology(), len, m_hwLocCpuSet, HWLOC_MEMBIND_BIND, HWLOC_MEMBIND_THREAD);
+}
 
 // ------------------------------------------------------------------------
 HwLocObject::HwLocObject(const Topology &topo, hwloc_obj_t hwLocObject) :
@@ -74,7 +96,7 @@ std::string HwLocObject::toString() const {
     std::string hwlocString(500, ' ');
     hwloc_obj_attr_snprintf(&hwlocString[0], hwlocString.size(), hwLocObject(), "\n", 5);
     out << " snprintf, " << hwlocString << std::endl;
-    for (int i=0; i<hwLocObject()->infos_count; ++i) {
+    for (unsigned i=0; i<hwLocObject()->infos_count; ++i) {
         out << "Info: " << hwLocObject()->infos[i].name << "=" << hwLocObject()->infos[i].value << std::endl;
     }
     out <<  "L#"  << hwLocObject()->logical_index
@@ -92,6 +114,11 @@ hwloc_obj_t HwLocObject::hwLocObject()
 
 const hwloc_obj_t HwLocObject::hwLocObject() const {
     return m_hwLocObject;
+}
+
+CpuSet HwLocObject::cpuSet()
+{
+    return CpuSet(sharedTopology(), hwLocObject()->cpuset);
 }
 
 size_t  HwLocObject::getNumContained(hwloc_obj_type_t type)
@@ -132,6 +159,7 @@ std::string ProcessingUnit::toString() const {
     out << "ProcessingUnit " << HwLocObject::toString();
     return out.str();
 }
+
 
 // ------------------------------------------------------------------------
 Core::Core(const Topology &topo, hwloc_obj_t hwLocObject) :
@@ -316,6 +344,27 @@ size_t HwLoc::getNumProcessingUnits()
 std::vector<ProcessingUnit> HwLoc::getProcessingUnits()
 {
     return root().processingUnits();
+}
+
+std::vector<CpuSet> HwLoc::getDistributedCpuSets(size_t num)
+{
+    std::vector<CpuSet> pus;
+
+    if (!initialized()) return pus;
+
+    hwloc_cpuset_t distributedCpus[num];
+    hwloc_obj_t roots[1] = {hwloc_get_root_obj(topology())};
+    hwloc_distrib(topology(), roots, 1, distributedCpus, num, INT_MAX, 0);
+
+    for (size_t i=0; i<num; ++i) {
+        pus.push_back(CpuSet(sharedTopology(), distributedCpus[i]));
+    }
+
+    char buffer[1024];
+    for (size_t i = 0; i < num; ++i) {
+        hwloc_bitmap_snprintf(buffer, sizeof(buffer), distributedCpus[i]);
+        std::cout << "CPU " << i << " : " << buffer << std::endl;
+    }
 }
 
 void HwLoc::distributeOverCpus(size_t numThreads)

@@ -144,7 +144,7 @@ void Cpu::optimizeParameters(size_t& threadsCount, size_t& hashFactor, Options::
 
 std::vector<ProcessingUnit::Ptr> Cpu::getDistributedProcessingUnits(size_t numThreads)
 {
-     return std::vector<ProcessingUnit::Ptr>();
+    return CpuImpl::instance().getDistributedProcessingUnits(numThreads);
 }
 
 void Cpu::setAffinity(int id, uint64_t mask)

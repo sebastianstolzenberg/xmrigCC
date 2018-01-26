@@ -27,6 +27,7 @@
 
 #include <stdint.h>
 #include <uv.h>
+#include "Cpu.h"
 
 
 class IWorker;
@@ -35,7 +36,7 @@ class IWorker;
 class Handle
 {
 public:
-    Handle(int threadId, int threads, int64_t affinity, int priority);
+    Handle(int threadId, int threads, int64_t affinity, int priority, const ProcessingUnit::Ptr& pu);
     void join();
     void start(void (*callback) (void *));
 
@@ -46,6 +47,8 @@ public:
     inline IWorker *worker() const         { return m_worker; }
     inline void setWorker(IWorker *worker) { m_worker = worker; }
 
+    void bindToProcessingUnit();
+
 private:
     int m_priority;
     int m_threadId;
@@ -53,6 +56,7 @@ private:
     int64_t m_affinity;
     IWorker *m_worker;
     uv_thread_t m_thread;
+    ProcessingUnit::Ptr m_processingUnit;
 };
 
 

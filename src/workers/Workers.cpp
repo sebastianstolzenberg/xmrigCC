@@ -30,6 +30,7 @@
 #include "api/Api.h"
 #include "interfaces/IJobResultListener.h"
 #include "Mem.h"
+#include "Cpu.h"
 #include "workers/MultiWorker.h"
 #include "workers/Handle.h"
 #include "workers/Hashrate.h"
@@ -105,6 +106,8 @@ void Workers::start(int64_t affinity, int priority)
     const int threads = Mem::threads();
     m_hashrate = new Hashrate(threads);
 
+    std::vector<ProcessingUnit::Ptr> processingUnits = Cpu::getDistributedProcessingUnits(threads);
+
     uv_mutex_init(&m_mutex);
     uv_rwlock_init(&m_rwlock);
 
@@ -116,7 +119,7 @@ void Workers::start(int64_t affinity, int priority)
     uv_timer_start(&m_timer, Workers::onTick, 500, 500);
 
     for (int i = 0; i < threads; ++i) {
-        auto handle = new Handle(i, threads, affinity, priority);
+        auto handle = new Handle(i, threads, affinity, priority, processingUnits[i]);
         m_workers.push_back(handle);
         handle->start(Workers::onReady);
     }

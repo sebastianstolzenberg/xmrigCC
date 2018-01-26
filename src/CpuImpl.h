@@ -29,6 +29,7 @@
 #include <vector>
 
 #include "Options.h"
+#include "Cpu.h"
 
 class CpuImpl
 {
@@ -39,6 +40,7 @@ public:
 
     void optimizeParameters(size_t& threadsCount, size_t& hashFactor, Options::Algo algo,
                             size_t maxCpuUsage, bool safeMode);
+    std::vector<ProcessingUnit::Ptr> getDistributedProcessingUnits(size_t numThreads);
     void setAffinity(int id, uint64_t mask);
 
     bool hasAES();

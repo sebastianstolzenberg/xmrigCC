@@ -48,14 +48,28 @@ namespace hwloc {
     };
 
     // ------------------------------------------------------------------------
-    class HwLocObject : public TopologySharer {
+    class CpuSet : public TopologySharer
+    {
+    public:
+        CpuSet(const Topology& topo, hwloc_cpuset_t cpuSet);
+
+        void bindThread();
+        void* allocMemBind(size_t len);
+
+    private:
+        hwloc_cpuset_t m_hwLocCpuSet;
+    };
+
+    // ------------------------------------------------------------------------
+    class HwLocObject : public TopologySharer
+    {
     public:
         HwLocObject(const Topology &topo, hwloc_obj_t hwLocObject);
         std::string toString() const;
         hwloc_obj_t hwLocObject();
         const hwloc_obj_t hwLocObject() const;
 
-        //void distributeEvenly()
+        CpuSet cpuSet();
 
     protected:
         size_t getNumContained(hwloc_obj_type_t type);
@@ -67,12 +81,12 @@ namespace hwloc {
         hwloc_obj_t m_hwLocObject;
     };
 
-
     // ------------------------------------------------------------------------
     class ProcessingUnit : public HwLocObject {
     public:
         ProcessingUnit(const Topology &topo, hwloc_obj_t hwLocObject);
         std::string toString() const;
+
     };
 
     // ------------------------------------------------------------------------
@@ -139,6 +153,7 @@ namespace hwloc {
         std::vector<Core> getCores();
         size_t getNumProcessingUnits();
         std::vector<ProcessingUnit> getProcessingUnits();
+        std::vector<CpuSet> getDistributedCpuSets(size_t num);
 
         void distributeOverCpus(size_t numThreads);
 

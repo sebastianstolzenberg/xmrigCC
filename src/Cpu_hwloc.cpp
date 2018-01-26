@@ -30,6 +30,27 @@
 #include "Cpu.h"
 #include "CpuImpl.h"
 
+class HwlocProcessingUnit : public ProcessingUnit
+{
+public:
+    HwlocProcessingUnit(const hwloc::CpuSet& hwlocPU) : m_hwlocCpuSet(hwlocPU)
+    {
+    }
+
+    void bindThread()
+    {
+        m_hwlocCpuSet.bindThread();
+    }
+
+    void* allocMemBind(size_t len)
+    {
+        return m_hwlocCpuSet.allocMemBind(len);
+    }
+
+private:
+    hwloc::CpuSet m_hwlocCpuSet;
+};
+
 void CpuImpl::initCommon()
 {
     hwloc::HwLoc topology;
@@ -83,4 +104,15 @@ void CpuImpl::initCommon()
     {
       m_flags |= Cpu::BMI2;
     }
+}
+
+std::vector<ProcessingUnit::Ptr> CpuImpl::getDistributedProcessingUnits(size_t numThreads)
+{
+    std::vector<ProcessingUnit::Ptr> pus;
+    hwloc::HwLoc topology;
+    std::vector<hwloc::CpuSet> cpuSets = topology.getDistributedCpuSets(numThreads);
+    for (auto cpuSet : cpuSets) {
+        pus.push_back(std::make_shared<HwlocProcessingUnit>(cpuSet));
+    }
+    return pus;
 }
