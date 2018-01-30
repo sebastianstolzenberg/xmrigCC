@@ -37,6 +37,21 @@ size_t Mem::m_memorySize = 0;
 uint8_t *Mem::m_memory   = nullptr;
 Mem::ThreadBitSet Mem::m_multiHashThreadMask = Mem::ThreadBitSet(-1L);
 
+size_t Mem::threadContextSize(size_t hashFactor)
+{
+    const size_t scratchPadSize = m_algo == Options::ALGO_CRYPTONIGHT ? MEMORY : MEMORY_LITE;
+    return sizeof(cryptonight_ctx) + scratchPadSize * hashFactor;
+}
+
+cryptonight_ctx *Mem::create(int threadId, ProcessingUnit& pu)
+{
+    cryptonight_ctx* ctx =
+            reinterpret_cast<cryptonight_ctx*>(
+                    pu.allocMemBind(threadContextSize(getThreadHashFactor(threadId))));
+    ctx->memory = reinterpret_cast<uint8_t*>(ctx) + sizeof(cryptonight_ctx);
+    return ctx;
+}
+
 cryptonight_ctx *Mem::create(int threadId)
 {
     size_t scratchPadSize = m_algo == Options::ALGO_CRYPTONIGHT ? MEMORY : MEMORY_LITE;

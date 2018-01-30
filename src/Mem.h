@@ -33,6 +33,7 @@
 
 #include "align.h"
 #include "Options.h"
+#include "Cpu.h"
 
 struct cryptonight_ctx;
 
@@ -48,6 +49,8 @@ public:
     };
 
     static bool allocate(const Options* options);
+    static size_t threadContextSize(size_t hashFactor);
+    static cryptonight_ctx *create(int threadId, ProcessingUnit& pu);
     static cryptonight_ctx *create(int threadId);
     static void release();
 

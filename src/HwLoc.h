@@ -54,7 +54,9 @@ namespace hwloc {
         CpuSet(const Topology& topo, hwloc_cpuset_t cpuSet);
 
         void bindThread();
+        void enableMemoryBinding();
         void* allocMemBind(size_t len);
+        int memFree(void *addr, size_t len);
 
     private:
         hwloc_cpuset_t m_hwLocCpuSet;
@@ -86,7 +88,6 @@ namespace hwloc {
     public:
         ProcessingUnit(const Topology &topo, hwloc_obj_t hwLocObject);
         std::string toString() const;
-
     };
 
     // ------------------------------------------------------------------------

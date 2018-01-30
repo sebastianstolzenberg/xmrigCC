@@ -47,6 +47,7 @@ public:
     inline IWorker *worker() const         { return m_worker; }
     inline void setWorker(IWorker *worker) { m_worker = worker; }
 
+    ProcessingUnit& processingUnit()       { return *m_processingUnit; }
     void bindToProcessingUnit();
 
 private:

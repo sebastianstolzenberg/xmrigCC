@@ -41,6 +41,8 @@ public:
     /// Binds current thread to this ProcessingUnit
     virtual void bindThread() = 0;
 
+    virtual void bindMemory() = 0;
+
     /// Allocates page-aligned memory bound to this ProcessingUnit's NUMA core
     virtual void* allocMemBind(size_t len) = 0;
 };

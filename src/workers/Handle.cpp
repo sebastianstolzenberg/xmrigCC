@@ -50,4 +50,5 @@ void Handle::start(void (*callback) (void *))
 void Handle::bindToProcessingUnit()
 {
     m_processingUnit->bindThread();
+    m_processingUnit->bindMemory();
 }

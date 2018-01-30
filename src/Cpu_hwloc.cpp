@@ -42,6 +42,11 @@ public:
         m_hwlocCpuSet.bindThread();
     }
 
+    void bindMemory()
+    {
+        m_hwlocCpuSet.enableMemoryBinding();
+    }
+
     void* allocMemBind(size_t len)
     {
         return m_hwlocCpuSet.allocMemBind(len);
@@ -87,7 +92,8 @@ void CpuImpl::initCommon()
 //        m_l2_exclusive = true;
 //    }
 
-    unsigned int eax, ebx, ecx, edx;
+    unsigned int eax = 0, ebx = 0, ecx = 0, edx = 0;
+    ;
 
 
 #   if defined(__x86_64__) || defined(_M_AMD64)

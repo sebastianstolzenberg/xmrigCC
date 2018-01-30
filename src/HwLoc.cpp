@@ -25,6 +25,8 @@
 
 #include <iostream>
 #include <sstream>
+
+#include "log/Log.h"
 #include "HwLoc.h"
 
 namespace hwloc {
@@ -77,9 +79,26 @@ void CpuSet::bindThread()
     hwloc_set_cpubind(topology(), m_hwLocCpuSet, HWLOC_CPUBIND_THREAD);
 }
 
+void CpuSet::enableMemoryBinding()
+{
+    hwloc_obj_t pu =
+            hwloc_get_obj_inside_cpuset_by_type(topology(), m_hwLocCpuSet, HWLOC_OBJ_PU, 0);
+    if (0 != hwloc_set_membind_nodeset(topology(), pu->nodeset, HWLOC_MEMBIND_BIND, HWLOC_MEMBIND_THREAD))
+    {
+        LOG_WARN("hwloc could not bind memory to numa node");
+    }
+}
+
 void* CpuSet::allocMemBind(size_t len)
 {
-    return hwloc_alloc_membind(topology(), len, m_hwLocCpuSet, HWLOC_MEMBIND_BIND, HWLOC_MEMBIND_THREAD);
+    return hwloc_alloc_membind(topology(), len, m_hwLocCpuSet,
+                               HWLOC_MEMBIND_BIND,
+                               HWLOC_MEMBIND_THREAD | HWLOC_MEMBIND_STRICT);
+}
+
+int CpuSet::memFree(void *addr, size_t len)
+{
+    return hwloc_free(topology(), addr, len);
 }
 
 // ------------------------------------------------------------------------
@@ -300,6 +319,14 @@ HwLoc::HwLoc()
 
     if (0 != hwloc_topology_load(topology())) setTopology(nullptr);
 
+//    const hwloc_topology_support* supported = hwloc_topology_get_support(topology());
+//
+//    if (supported)
+//    {
+//        LOG_INFO("supported->discovery = %d", supported->discovery);
+//        LOG_INFO("supported->cpubind = %d", supported->cpubind);
+//        LOG_INFO("supported->membind = %d", supported->membind);
+//    }
 }
 
 Root HwLoc::root()
