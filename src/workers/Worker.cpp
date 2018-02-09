@@ -49,7 +49,7 @@ Worker::Worker(Handle *handle) :
 //    }
 
     Platform::setThreadPriority(handle->priority());
-    m_ctx = Mem::create(m_id, handle->processingUnit());
+    m_ctx = Mem::create(m_id);//, handle->processingUnit());
     if (m_ctx == nullptr)
     {
         LOG_ERR("m_ctx == null");

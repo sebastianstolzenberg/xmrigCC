@@ -9,6 +9,4 @@
 CMakeCache.txt
 cmake_install.cmake
 Makefile
-cmake-build-release/
-
-cmake-build-daemonstaticrelease/
+cmake-build-*
