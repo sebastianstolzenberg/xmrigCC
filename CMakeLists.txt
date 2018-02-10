@@ -14,47 +14,8 @@ option(WITH_CC_SERVER "CC Server" ON)
 include (CheckIncludeFile)
 include (cmake/cpu.cmake)
 
-set(SOURCES
-    src/api/Api.cpp
-    src/api/ApiState.cpp
-    src/api/NetworkState.cpp
-    src/App.cpp
-    src/net/Client.cpp
-    src/net/Job.cpp
-    src/net/Network.cpp
-    src/net/strategies/DonateStrategy.cpp
-    src/net/strategies/FailoverStrategy.cpp
-    src/net/strategies/SinglePoolStrategy.cpp
-    src/net/SubmitResult.cpp
-    src/Summary.cpp
-    src/workers/MultiWorker.cpp
-    src/workers/Handle.cpp
-    src/workers/Hashrate.cpp
-    src/workers/Worker.cpp
-    src/workers/Workers.cpp
-    src/xmrig.cpp
-   )
-
-set(SOURCES_CRYPTO
-    src/crypto/c_keccak.c
-    src/crypto/c_groestl.c
-    src/crypto/c_blake256.c
-    src/crypto/c_jh.c
-    src/crypto/c_skein.c
-    src/crypto/CryptoNight.cpp
-   )
-
-set(SOURCES_COMMON
-    src/Console.cpp
-    src/Mem.cpp
-    src/net/Url.cpp
-    src/Options.cpp
-    src/log/ConsoleLog.cpp
-    src/log/FileLog.cpp
-    src/log/Log.cpp
-    src/Platform.cpp
-    src/Cpu.cpp
-   )
+find_package(OpenSSL)
+find_package(Boost COMPONENTS thread system REQUIRED)
 
 if (WIN32)
     set(SOURCES_OS
@@ -62,8 +23,7 @@ if (WIN32)
         src/App_win.cpp
         src/Cpu_win.cpp
         src/Mem_win.cpp
-        src/Platform_win.cpp
-        )
+        src/Platform_win.cpp)
 
     add_definitions(/DWIN32)
     set(EXTRA_LIBS ws2_32 psapi iphlpapi userenv)
@@ -72,15 +32,13 @@ elseif (APPLE)
         src/App_unix.cpp
         src/Cpu_mac.cpp
         src/Mem_unix.cpp
-        src/Platform_mac.cpp
-        )
+        src/Platform_mac.cpp)
 else()
     set(SOURCES_OS
         src/App_unix.cpp
         src/Cpu_unix.cpp
         src/Mem_unix.cpp
-        src/Platform_unix.cpp
-        )
+        src/Platform_unix.cpp)
 
     set(EXTRA_LIBS pthread rt)
 endif()
@@ -99,6 +57,7 @@ endif()
 add_definitions(/D__STDC_FORMAT_MACROS)
 add_definitions(/DUNICODE)
 #add_definitions(/DAPP_DEBUG)
+add_definitions(-fexceptions)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
@@ -156,23 +115,24 @@ if (WITH_CC_SERVER)
     endif()
 
     set(SOURCES_CC_SERVER
-            src/cc/CCServer.cpp
-            src/cc/Service.cpp
-            src/cc/Summary.cpp
-            src/cc/Httpd.cpp
-            src/cc/XMRigCC.cpp
-            )
+        src/cc/CCServer.cpp
+        src/cc/Service.cpp
+        src/cc/Summary.cpp
+        src/cc/Httpd.cpp
+        src/cc/XMRigCC.cpp
+        src/Options.cpp
+        src/Platform.cpp)
 endif()
 
 if (WITH_CC_CLIENT)
     set(SOURCES_CC_CLIENT
-            src/cc/CCClient.cpp)
+        src/cc/CCClient.cpp)
 endif()
 
 if (WITH_CC_SERVER OR WITH_CC_CLIENT)
     set(SOURCES_CC_COMMON
-            src/cc/ControlCommand.cpp
-            src/cc/ClientStatus.cpp)
+        src/cc/ControlCommand.cpp
+        src/cc/ClientStatus.cpp)
 else()
     add_definitions(/DXMRIG_NO_CC)
 endif()
@@ -181,18 +141,68 @@ include_directories(src)
 include_directories(src/3rdparty)
 include_directories(${UV_INCLUDE_DIR})
 
-add_library(xmrig_common STATIC ${SOURCES_COMMON})
+add_library(xmrig_common STATIC
+    src/Console.cpp
+    src/Mem.cpp
+    src/net/Url.cpp
+    src/log/ConsoleLog.cpp
+    src/log/FileLog.cpp
+    src/log/Log.cpp
+    src/Cpu.cpp)
+add_library(xmrig_crypto STATIC
+    src/crypto/c_keccak.c
+    src/crypto/c_groestl.c
+    src/crypto/c_blake256.c
+    src/crypto/c_jh.c
+    src/crypto/c_skein.c
+    src/crypto/CryptoNight.cpp)
 add_library(xmrig_os_dependencies STATIC ${SOURCES_OS} ${SOURCES_SYSLOG})
 add_library(xmrig_cpuid STATIC ${SOURCES_CPUID})
 
 if (WITH_CC_SERVER OR WITH_CC_CLIENT)
-    add_library(xmrig_cc_common STATIC ${SOURCES_CC_COMMON})
+add_library(xmrig_cc_common STATIC ${SOURCES_CC_COMMON})
 endif (WITH_CC_SERVER OR WITH_CC_CLIENT)
 
-add_executable(xmrigMiner ${SOURCES} ${SOURCES_CRYPTO} ${HTTPD_SOURCES} ${SOURCES_CC_CLIENT} res/app.rc)
+add_executable(xmrigMiner
+    src/api/Api.cpp
+    src/api/ApiState.cpp
+    src/api/NetworkState.cpp
+    src/App.cpp
+    src/net/BoostTlsConnection.cpp
+    src/net/Connection.cpp
+    src/net/Client.cpp
+    src/net/Job.cpp
+    src/net/Network.cpp
+    src/net/strategies/DonateStrategy.cpp
+    src/net/strategies/FailoverStrategy.cpp
+    src/net/strategies/SinglePoolStrategy.cpp
+    src/net/SubmitResult.cpp
+    src/Summary.cpp
+    src/workers/MultiWorker.cpp
+    src/workers/Handle.cpp
+    src/workers/Hashrate.cpp
+    src/workers/Worker.cpp
+    src/workers/Workers.cpp
+    src/Options.cpp
+    src/Platform.cpp
+    src/xmrig.cpp
+    ${HTTPD_SOURCES}
+    ${SOURCES_CC_CLIENT}
+    res/app.rc)
 
-target_link_libraries(xmrigMiner xmrig_common xmrig_os_dependencies xmrig_cpuid
-        ${UV_LIBRARIES} ${MHD_LIBRARY} ${EXTRA_LIBS} ${CPUID_LIB})
+target_link_libraries(xmrigMiner
+        xmrig_crypto
+        xmrig_common
+        xmrig_os_dependencies
+        xmrig_cpuid
+        Boost::system
+        Boost::thread
+        OpenSSL::SSL
+        OpenSSL::Crypto
+        ${UV_LIBRARIES}
+        ${MHD_LIBRARY}
+        ${EXTRA_LIBS}
+        ${CPUID_LIB})
 
 if (WITH_CC_CLIENT)
     target_link_libraries(xmrigMiner xmrig_cc_common)
@@ -201,12 +211,17 @@ endif (WITH_CC_CLIENT)
 add_executable(xmrigDaemon src/cc/XMRigd.cpp res/app.rc)
 
 if (WITH_CC_SERVER AND MHD_FOUND)
-    add_library(xmrig_common_cc STATIC ${SOURCES_COMMON})
+
     add_executable(xmrigCCServer ${SOURCES_CC_SERVER} res/app.rc)
     target_link_libraries(xmrigCCServer
-            xmrig_common_cc xmrig_os_dependencies xmrig_cpuid xmrig_cc_common
-            ${UV_LIBRARIES} ${MHD_LIBRARY} ${EXTRA_LIBS} ${CPUID_LIB})
-    set_target_properties(xmrig_common_cc PROPERTIES COMPILE_FLAGS "-DXMRIG_CC_SERVER ${SHARED_FLAGS}")
+            xmrig_common
+            xmrig_os_dependencies
+            xmrig_cpuid
+            xmrig_cc_common
+            ${UV_LIBRARIES}
+            ${MHD_LIBRARY}
+            ${EXTRA_LIBS}
+            ${CPUID_LIB})
     set_target_properties(xmrigCCServer PROPERTIES COMPILE_FLAGS "-DXMRIG_CC_SERVER ${SHARED_FLAGS}")
 endif()
 

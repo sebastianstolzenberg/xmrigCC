@@ -5,6 +5,7 @@
  * Copyright 2014-2016 Wolf9466    <https://github.com/OhGodAPet>
  * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
  * Copyright 2016-2017 XMRig       <support@xmrig.com>
+ * Copyright 2018      Sebastian Stolzenberg <https://github.com/sebastianstolzenberg>
  *
  *
  *   This program is free software: you can redistribute it and/or modify
@@ -26,12 +27,14 @@
 
 
 #include <map>
+#include <memory>
 #include <uv.h>
 
 
 #include "net/Job.h"
 #include "net/SubmitResult.h"
 #include "net/Url.h"
+#include "net/Connection.h"
 #include "rapidjson/fwd.h"
 
 
@@ -39,8 +42,12 @@ class IClientListener;
 class JobResult;
 
 
-class Client
+class Client : public ConnectionListener,
+               public std::enable_shared_from_this<Client>
 {
+public:
+    typedef std::shared_ptr<Client> Ptr;
+
 public:
     enum SocketState {
         UnconnectedState,
@@ -96,6 +103,9 @@ private:
     static void onRead(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf);
     static void onResolved(uv_getaddrinfo_t *req, int status, struct addrinfo *res);
 
+    virtual void onReceived(char* data, std::size_t size);
+    virtual void onError();
+
     static inline Client *getClient(void *data) { return static_cast<Client*>(data); }
 
     addrinfo m_hints;
@@ -124,6 +134,8 @@ private:
 #   ifndef XMRIG_PROXY_PROJECT
     uv_timer_t m_keepAliveTimer;
 #   endif
+
+    Connection::Ptr m_connection;
 };
 
 

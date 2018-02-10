@@ -51,7 +51,7 @@ DonateStrategy::DonateStrategy(const char *agent, IStrategyListener *listener) :
 
     Url *url = new Url("donate.graef.in", Options::i()->algo() == Options::ALGO_CRYPTONIGHT_LITE ? 80 : 443, userId, nullptr, false, true);
 
-    m_client = new Client(-1, agent, this);
+    m_client = std::make_shared<Client>(-1, agent, this);
     m_client->setUrl(url);
     m_client->setRetryPause(Options::i()->retryPause() * 1000);
     m_client->setQuiet(true);
