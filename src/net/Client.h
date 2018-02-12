@@ -61,7 +61,6 @@ public:
     constexpr static int kKeepAliveTimeout = 60 * 1000;
 
     Client(int id, const char *agent, IClientListener *listener);
-    ~Client();
 
     int64_t submit(const JobResult &result);
     void connect();
@@ -70,12 +69,11 @@ public:
     void setUrl(const Url *url);
     void tick(uint64_t now);
 
-    inline bool isReady() const              { return m_state == ConnectedState && m_failures == 0; }
+    inline bool isReady() const              { return m_connection && m_failures == 0; }
     inline const char *host() const          { return m_url.host(); }
-    inline const char *ip() const            { return m_ip; }
+    const char *ip() const;
     inline const Job &job() const            { return m_job; }
     inline int id() const                    { return m_id; }
-    inline SocketState state() const         { return m_state; }
     inline uint16_t port() const             { return m_url.port(); }
     inline void setQuiet(bool quiet)         { m_quiet = quiet; }
     inline void setRetryPause(int ms)        { m_retryPause = ms; }
@@ -99,10 +97,8 @@ private:
 
     static inline Client *getClient(void *data) { return static_cast<Client*>(data); }
 
-    addrinfo m_hints;
     bool m_quiet;
     char m_buf[2048];
-    char m_ip[17];
     char m_rpcId[64];
     char m_sendBuf[768];
     const char *m_agent;
@@ -112,7 +108,6 @@ private:
     int64_t m_failures;
     Job m_job;
     size_t m_recvBufPos;
-    SocketState m_state;
     static int64_t m_sequence;
     std::map<int64_t, SubmitResult> m_results;
     uint64_t m_expire;

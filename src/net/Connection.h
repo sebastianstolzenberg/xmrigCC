@@ -52,7 +52,8 @@ protected:
     void notifyError(const std::string& error);
 
 public:
-    virtual bool connected() = 0;
+    virtual bool connected()  const = 0;
+    virtual std::string connectedIp() const = 0;
     virtual bool send(const char* data, std::size_t size) = 0;
 
 private:

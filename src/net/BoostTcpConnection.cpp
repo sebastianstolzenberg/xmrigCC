@@ -49,6 +49,11 @@ public:
         return socket_;
     }
 
+    const SocketType& get() const
+    {
+        return socket_;
+    }
+
 private:
     SocketType socket_;
 };

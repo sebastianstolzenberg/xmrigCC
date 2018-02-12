@@ -61,21 +61,12 @@ Client::Client(int id, const char *agent, IClientListener *listener) :
     m_retryPause(5000),
     m_failures(0),
     m_recvBufPos(0),
-    m_state(UnconnectedState),
     m_expire(0)
 {
-    memset(m_ip, 0, sizeof(m_ip));
-    memset(&m_hints, 0, sizeof(m_hints));
-
 #   ifndef XMRIG_PROXY_PROJECT
     m_keepAliveTimer.data = this;
     uv_timer_init(uv_default_loop(), &m_keepAliveTimer);
 #   endif
-}
-
-
-Client::~Client()
-{
 }
 
 
@@ -138,6 +129,10 @@ void Client::tick(uint64_t now)
     }
 }
 
+const char* Client::ip() const
+{
+    return m_connection ? m_connection->connectedIp().c_str() : "";
+}
 
 int64_t Client::submit(const JobResult &result)
 {

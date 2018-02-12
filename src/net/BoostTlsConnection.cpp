@@ -53,6 +53,12 @@ public:
         return socket_;
     }
 
+    const SocketType& get() const
+    {
+        return socket_;
+    }
+
+
 private:
     boost::asio::ssl::context sslContext_;
     SocketType socket_;

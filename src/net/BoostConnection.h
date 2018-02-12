@@ -47,10 +47,17 @@ public:
     {
     }
 
-    virtual bool connected()
+    virtual bool connected() const
     {
         return socket_.get().lowest_layer().is_open();
 
+    }
+
+    virtual std::string connectedIp() const
+    {
+        return connected() ?
+               socket_.get().lowest_layer().remote_endpoint().address().to_string() :
+               "";
     }
 
     virtual bool send(const char* data, std::size_t size)
