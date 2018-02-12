@@ -37,7 +37,7 @@ protected:
 
 public:
     virtual void onReceived(char* data, std::size_t size) = 0;
-    virtual void onError() = 0;
+    virtual void onError(const std::string& error) = 0;
 };
 
 class Connection : private boost::noncopyable
@@ -49,10 +49,11 @@ protected:
     Connection(const ConnectionListener::Ptr& listener);
     virtual ~Connection() {};
     void notifyRead(char* data, size_t size);
-    void notifyError();
+    void notifyError(const std::string& error);
 
 public:
-    virtual bool send(const void* data, std::size_t size) = 0;
+    virtual bool connected() = 0;
+    virtual bool send(const char* data, std::size_t size) = 0;
 
 private:
     ConnectionListener::WeakPtr listener_;
@@ -60,6 +61,7 @@ private:
 
 enum ConnectionType
 {
+    CONNECTION_TYPE_AUTO,
     CONNECTION_TYPE_TCP,
     CONNECTION_TYPE_TLS
 };

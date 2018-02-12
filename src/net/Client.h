@@ -84,27 +84,18 @@ private:
     bool isCriticalError(const char *message);
     bool parseJob(const rapidjson::Value &params, int *code);
     bool parseLogin(const rapidjson::Value &result, int *code);
-    int resolve(const char *host);
-    int64_t send(size_t size);
+    int64_t send(char* buf, size_t size);
     void close();
-    void connect(struct sockaddr *addr);
+    void reconnect();
     void login();
     void parse(char *line, size_t len);
     void parseNotification(const char *method, const rapidjson::Value &params, const rapidjson::Value &error);
     void parseResponse(int64_t id, const rapidjson::Value &result, const rapidjson::Value &error);
     void ping();
-    void reconnect();
-    void setState(SocketState state);
     void startTimeout();
 
-    static void onAllocBuffer(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf);
-    static void onClose(uv_handle_t *handle);
-    static void onConnect(uv_connect_t *req, int status);
-    static void onRead(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf);
-    static void onResolved(uv_getaddrinfo_t *req, int status, struct addrinfo *res);
-
     virtual void onReceived(char* data, std::size_t size);
-    virtual void onError();
+    virtual void onError(const std::string& error);
 
     static inline Client *getClient(void *data) { return static_cast<Client*>(data); }
 
@@ -126,16 +117,15 @@ private:
     std::map<int64_t, SubmitResult> m_results;
     uint64_t m_expire;
     Url m_url;
-    uv_buf_t m_recvBuf;
-    uv_getaddrinfo_t m_resolver;
-    uv_stream_t *m_stream;
-    uv_tcp_t *m_socket;
 
 #   ifndef XMRIG_PROXY_PROJECT
     uv_timer_t m_keepAliveTimer;
 #   endif
 
     Connection::Ptr m_connection;
+
+    //TODO response timeout
+    //TODO ping timer
 };
 
 

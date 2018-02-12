@@ -15,7 +15,7 @@ include (CheckIncludeFile)
 include (cmake/cpu.cmake)
 
 find_package(OpenSSL)
-find_package(Boost COMPONENTS thread system REQUIRED)
+find_package(Boost COMPONENTS system REQUIRED)
 
 if (WIN32)
     set(SOURCES_OS
@@ -169,6 +169,7 @@ add_executable(xmrigMiner
     src/api/NetworkState.cpp
     src/App.cpp
     src/net/BoostTlsConnection.cpp
+    src/net/BoostTcpConnection.cpp
     src/net/Connection.cpp
     src/net/Client.cpp
     src/net/Job.cpp
@@ -196,7 +197,6 @@ target_link_libraries(xmrigMiner
         xmrig_os_dependencies
         xmrig_cpuid
         Boost::system
-        Boost::thread
         OpenSSL::SSL
         OpenSSL::Crypto
         ${UV_LIBRARIES}

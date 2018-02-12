@@ -62,21 +62,10 @@ Client::Client(int id, const char *agent, IClientListener *listener) :
     m_failures(0),
     m_recvBufPos(0),
     m_state(UnconnectedState),
-    m_expire(0),
-    m_stream(nullptr),
-    m_socket(nullptr)
+    m_expire(0)
 {
     memset(m_ip, 0, sizeof(m_ip));
     memset(&m_hints, 0, sizeof(m_hints));
-
-    m_resolver.data = this;
-
-    m_hints.ai_family   = PF_INET;
-    m_hints.ai_socktype = SOCK_STREAM;
-    m_hints.ai_protocol = IPPROTO_TCP;
-
-    m_recvBuf.base = m_buf;
-    m_recvBuf.len  = sizeof(m_buf);
 
 #   ifndef XMRIG_PROXY_PROJECT
     m_keepAliveTimer.data = this;
@@ -87,15 +76,13 @@ Client::Client(int id, const char *agent, IClientListener *listener) :
 
 Client::~Client()
 {
-    delete m_socket;
 }
 
 
 void Client::connect()
 {
-    //resolve(m_url.host());
     m_connection = establishConnection(shared_from_this(),
-                                       CONNECTION_TYPE_TLS,
+                                       CONNECTION_TYPE_AUTO,
                                        m_url.host(), m_url.port());
     login();
 }
@@ -110,7 +97,6 @@ void Client::connect(const Url *url)
 {
     setUrl(url);
     connect();
-    //resolve(m_url.host());
 }
 
 
@@ -143,14 +129,11 @@ void Client::tick(uint64_t now)
         return;
     }
 
-//    if (m_state == ConnectedState) {
     if (m_connection) {
         LOG_DEBUG_ERR("[%s:%u] timeout", m_url.host(), m_url.port());
-//        close();
+        reconnect();
     }
-
-
-    if (m_state == ConnectingState) {
+    else {
         connect();
     }
 }
@@ -172,11 +155,23 @@ int64_t Client::submit(const JobResult &result)
     data[64] = '\0';
 #   endif
 
-    const size_t size = snprintf(m_sendBuf, sizeof(m_sendBuf), "{\"id\":%" PRIu64 ",\"jsonrpc\":\"2.0\",\"method\":\"submit\",\"params\":{\"id\":\"%s\",\"job_id\":\"%s\",\"nonce\":\"%s\",\"result\":\"%s\"}}\n",
-                                 m_sequence, m_rpcId, result.jobId.data(), nonce, data);
+    const int size = snprintf(m_sendBuf, sizeof(m_sendBuf),
+                              "{"
+                                  "\"id\":%" PRIu64 ","
+                                  "\"jsonrpc\":\"2.0\","
+                                  "\"method\":\"submit\","
+                                  "\"params\":"
+                                      "{"
+                                          "\"id\":\"%s\","
+                                          "\"job_id\":\"%s\","
+                                          "\"nonce\":\"%s\","
+                                          "\"result\":\"%s\""
+                                      "}"
+                               "}\n",
+                                m_sequence, m_rpcId, result.jobId.data(), nonce, data);
 
     m_results[m_sequence] = SubmitResult(m_sequence, result.diff, result.actualDiff());
-    return send(size);
+    return send(m_sendBuf, size);
 }
 
 
@@ -254,48 +249,17 @@ bool Client::parseLogin(const rapidjson::Value &result, int *code)
 }
 
 
-//int Client::resolve(const char *host)
-//{
-//    setState(HostLookupState);
-//
-//    m_expire     = 0;
-//    m_recvBufPos = 0;
-//
-//    if (m_failures == -1) {
-//        m_failures = 0;
-//    }
-//
-//    const int r = uv_getaddrinfo(uv_default_loop(), &m_resolver, Client::onResolved, host, NULL, &m_hints);
-//    if (r) {
-//        if (!m_quiet) {
-//            LOG_ERR("[%s:%u] getaddrinfo error: \"%s\"", host, m_url.port(), uv_strerror(r));
-//        }
-//        return 1;
-//    }
-//
-//    return 0;
-//}
-
-
-int64_t Client::send(size_t size)
+int64_t Client::send(char* buf, size_t size)
 {
-    LOG_DEBUG("[%s:%u] send (%d bytes): \"%s\"", m_url.host(), m_url.port(), size, m_sendBuf);
-//    if (state() != ConnectedState || !uv_is_writable(m_stream)) {
+    LOG_DEBUG("[%s:%u] send (%d bytes): \"%s\"", m_url.host(), m_url.port(), size, buf);
     if (!m_connection) {
         LOG_DEBUG_ERR("[%s:%u] send failed", m_url.host(), m_url.port());
         return -1;
     }
 
-    m_connection->send(m_sendBuf, size);
+    m_connection->send(buf, size);
 
-//    uv_buf_t buf = uv_buf_init(m_sendBuf, (unsigned int) size);
-//
-//    if (uv_try_write(m_stream, &buf, 1) < 0) {
-//        close();
-//        return -1;
-//    }
-//
-//    m_expire = uv_now(uv_default_loop()) + kResponseTimeout;
+    m_expire = uv_now(uv_default_loop()) + kResponseTimeout;
     return m_sequence++;
 }
 
@@ -303,41 +267,7 @@ int64_t Client::send(size_t size)
 void Client::close()
 {
     m_connection.reset();
-
-//    if (m_state == UnconnectedState || m_state == ClosingState || !m_socket) {
-//        return;
-//    }
-//
-//    setState(ClosingState);
-//
-//    if (uv_is_closing(reinterpret_cast<uv_handle_t*>(m_socket)) == 0) {
-//        uv_close(reinterpret_cast<uv_handle_t*>(m_socket), Client::onClose);
-//    }
 }
-//
-//
-//void Client::connect(struct sockaddr *addr)
-//{
-//    setState(ConnectingState);
-//
-//    reinterpret_cast<struct sockaddr_in*>(addr)->sin_port = htons(m_url.port());
-//    delete m_socket;
-//
-//    uv_connect_t *req = new uv_connect_t;
-//    req->data = this;
-//
-//    m_socket = new uv_tcp_t;
-//    m_socket->data = this;
-//
-//    uv_tcp_init(uv_default_loop(), m_socket);
-//    uv_tcp_nodelay(m_socket, 1);
-//
-//#   ifndef WIN32
-//    uv_tcp_keepalive(m_socket, 1, 60);
-//#   endif
-//
-//    uv_tcp_connect(req, m_socket, reinterpret_cast<const sockaddr*>(addr), Client::onConnect);
-//}
 
 
 void Client::login()
@@ -373,13 +303,13 @@ void Client::login()
     m_sendBuf[size]     = '\n';
     m_sendBuf[size + 1] = '\0';
 
-    send(size + 1);
+    send(m_sendBuf, size + 1);
 }
 
 
 void Client::parse(char *line, size_t len)
 {
-//    startTimeout();
+    startTimeout();
 
     line[len - 1] = '\0';
 
@@ -487,179 +417,56 @@ void Client::parseResponse(int64_t id, const rapidjson::Value &result, const rap
 
 void Client::ping()
 {
-    send(snprintf(m_sendBuf, sizeof(m_sendBuf), "{\"id\":%" PRId64 ",\"jsonrpc\":\"2.0\",\"method\":\"keepalived\",\"params\":{\"id\":\"%s\"}}\n", m_sequence, m_rpcId));
+    const int size = snprintf(m_sendBuf, sizeof(m_sendBuf),
+                              "{"
+                                  "\"id\":%" PRId64 ","
+                                  "\"jsonrpc\":\"2.0\","
+                                  "\"method\":\"keepalived\","
+                                  "\"params\":"
+                                      "{"
+                                          "\"id\":\"%s\""
+                                      "}"
+                              "}\n",
+                              m_sequence, m_rpcId);
+    send(m_sendBuf, size);
 }
 
 
-//void Client::reconnect()
-//{
-//    setState(ConnectingState);
-//
-//#   ifndef XMRIG_PROXY_PROJECT
-//    if (m_url.isKeepAlive()) {
-//        uv_timer_stop(&m_keepAliveTimer);
-//    }
-//#   endif
-//
-//    if (m_failures == -1) {
-//        return m_listener->onClose(this, -1);
-//    }
-//
-//    m_failures++;
-//    m_listener->onClose(this, (int) m_failures);
-//
-//    m_expire = uv_now(uv_default_loop()) + m_retryPause;
-//}
-//
-//
-//void Client::setState(SocketState state)
-//{
-//    LOG_DEBUG("[%s:%u] state: %d", m_url.host(), m_url.port(), state);
-//
-//    if (m_state == state) {
-//        return;
-//    }
-//
-//    m_state = state;
-//}
-//
-//
-//void Client::startTimeout()
-//{
-//    m_expire = 0;
-//
-//#   ifndef XMRIG_PROXY_PROJECT
-//    if (!m_url.isKeepAlive()) {
-//        return;
-//    }
-//
-//    uv_timer_start(&m_keepAliveTimer, [](uv_timer_t *handle) { getClient(handle->data)->ping(); }, kKeepAliveTimeout, 0);
-//#   endif
-//}
-//
-//
-//void Client::onAllocBuffer(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf)
-//{
-//    auto client = getClient(handle->data);
-//
-//    buf->base = &client->m_recvBuf.base[client->m_recvBufPos];
-//    buf->len  = client->m_recvBuf.len - client->m_recvBufPos;
-//}
-//
-//
-//void Client::onClose(uv_handle_t *handle)
-//{
-//    auto client = getClient(handle->data);
-//
-//    delete client->m_socket;
-//
-//    client->m_stream = nullptr;
-//    client->m_socket = nullptr;
-//    client->setState(UnconnectedState);
-//
-//    client->reconnect();
-//}
-//
-//
-//void Client::onConnect(uv_connect_t *req, int status)
-//{
-//    auto client = getClient(req->data);
-//    if (status < 0) {
-//        if (!client->m_quiet) {
-//            LOG_ERR("[%s:%u] connect error: \"%s\"", client->m_url.host(), client->m_url.port(), uv_strerror(status));
-//        }
-//
-//        delete req;
-//        client->close();
-//        return;
-//    }
-//
-//    client->m_stream = static_cast<uv_stream_t*>(req->handle);
-//    client->m_stream->data = req->data;
-//    client->setState(ConnectedState);
-//
-//    uv_read_start(client->m_stream, Client::onAllocBuffer, Client::onRead);
-//    delete req;
-//
-//    client->login();
-//}
-
-
-void Client::onRead(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf)
+void Client::reconnect()
 {
-    auto client = getClient(stream->data);
-    if (nread < 0) {
-        if (nread != UV_EOF && !client->m_quiet) {
-            LOG_ERR("[%s:%u] read error: \"%s\"", client->m_url.host(), client->m_url.port(), uv_strerror((int) nread));
-        }
+    close();
 
-        return client->close();
+#   ifndef XMRIG_PROXY_PROJECT
+    if (m_url.isKeepAlive()) {
+        uv_timer_stop(&m_keepAliveTimer);
+    }
+#   endif
+
+    if (m_failures == -1) {
+        return m_listener->onClose(this, -1);
     }
 
-    if ((size_t) nread > (sizeof(m_buf) - 8 - client->m_recvBufPos)) {
-        return client->close();
-    }
+    m_failures++;
+    m_listener->onClose(this, (int) m_failures);
 
-    client->m_recvBufPos += nread;
-
-    char* end;
-    char* start = buf->base;
-    size_t remaining = client->m_recvBufPos;
-
-    while ((end = static_cast<char*>(memchr(start, '\n', remaining))) != nullptr) {
-        end++;
-        size_t len = end - start;
-        client->parse(start, len);
-
-        remaining -= len;
-        start = end;
-    }
-
-    if (remaining == 0) {
-        client->m_recvBufPos = 0;
-        return;
-    }
-
-    if (start == buf->base) {
-        return;
-    }
-
-    memcpy(buf->base, start, remaining);
-    client->m_recvBufPos = remaining;
+    m_expire = uv_now(uv_default_loop()) + m_retryPause;
 }
 
 
-//void Client::onResolved(uv_getaddrinfo_t *req, int status, struct addrinfo *res)
-//{
-//    auto client = getClient(req->data);
-//    if (status < 0) {
-//        LOG_ERR("[%s:%u] DNS error: \"%s\"", client->m_url.host(), client->m_url.port(), uv_strerror(status));
-//        return client->reconnect();
-//    }
-//
-//    addrinfo *ptr = res;
-//    std::vector<addrinfo*> ipv4;
-//
-//    while (ptr != nullptr) {
-//        if (ptr->ai_family == AF_INET) {
-//            ipv4.push_back(ptr);
-//        }
-//
-//        ptr = ptr->ai_next;
-//    }
-//
-//    if (ipv4.empty()) {
-//        LOG_ERR("[%s:%u] DNS error: \"No IPv4 records found\"", client->m_url.host(), client->m_url.port());
-//        return client->reconnect();
-//    }
-//
-//    ptr = ipv4[rand() % ipv4.size()];
-//
-//    uv_ip4_name(reinterpret_cast<sockaddr_in*>(ptr->ai_addr), client->m_ip, 16);
-//
-//    client->connect(ptr->ai_addr);
-//    uv_freeaddrinfo(res);
-//}
+void Client::startTimeout()
+{
+    m_expire = 0;
+
+#   ifndef XMRIG_PROXY_PROJECT
+    if (!m_url.isKeepAlive()) {
+        return;
+    }
+
+    uv_timer_start(&m_keepAliveTimer,
+                   [](uv_timer_t *handle) { getClient(handle->data)->ping(); },
+                   kKeepAliveTimeout, 0);
+#   endif
+}
 
 void Client::onReceived(char* data, std::size_t size)
 {
@@ -696,15 +503,10 @@ void Client::onReceived(char* data, std::size_t size)
     m_recvBufPos = remaining;
 }
 
-void Client::onError()
+void Client::onError(const std::string& error)
 {
-    // TODO error handling
-//    if (nread < 0) {
-//        if (nread != UV_EOF && !client->m_quiet) {
-//            LOG_ERR("[%s:%u] read error: \"%s\"", client->m_url.host(), client->m_url.port(), uv_strerror((int) nread));
-//        }
-//
-//        return client->close();
-//    }
-
+    if (!m_quiet) {
+        LOG_ERR("[%s:%u] error: \"%s\"", m_url.host(), m_url.port(), error);
+    }
+    close();
 }

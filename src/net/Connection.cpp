@@ -20,6 +20,7 @@
 #include <boost/exception/diagnostic_information.hpp>
 #include "Connection.h"
 #include "BoostTlsConnection.h"
+#include "BoostTcpConnection.h"
 
 
 Connection::Connection(const ConnectionListener::Ptr &listener)
@@ -36,12 +37,12 @@ void Connection::notifyRead(char* data, size_t size)
     }
 }
 
-void Connection::notifyError()
+void Connection::notifyError(const std::string& error)
 {
     ConnectionListener::Ptr listener = listener_.lock();
     if (listener)
     {
-        listener->onError();
+        listener->onError(error);
     }
 }
 
@@ -51,6 +52,10 @@ Connection::Ptr establishConnection(const ConnectionListener::Ptr& listener,
 {
     Connection::Ptr connection;
 
+    if (type == CONNECTION_TYPE_AUTO) {
+        type = (port == 443) ? CONNECTION_TYPE_TLS : CONNECTION_TYPE_TCP;
+    }
+
     try {
         switch (type) {
             case CONNECTION_TYPE_TLS:
@@ -58,6 +63,8 @@ Connection::Ptr establishConnection(const ConnectionListener::Ptr& listener,
                 break;
 
             case CONNECTION_TYPE_TCP:
+                connection = establishBoostTcpConnection(listener, host, port);
+
             default:
                 break;
         }

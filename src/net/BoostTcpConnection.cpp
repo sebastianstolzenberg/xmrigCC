@@ -21,31 +21,27 @@
 
 #include <boost/bind.hpp>
 #include <boost/asio.hpp>
-#include <boost/asio/ssl.hpp>
 
 #include "net/BoostConnection.h"
-#include "net/BoostTlsConnection.h"
+#include "net/BoostTcpConnection.h"
 
-class BoostTlsSocket
+class BoostTcpSocket
 {
 public:
-    typedef  boost::asio::ssl::stream<boost::asio::ip::tcp::socket> SocketType;
+    typedef  boost::asio::ip::tcp::socket SocketType;
 public:
-    BoostTlsSocket(boost::asio::io_service& ioService)
-            : sslContext_(boost::asio::ssl::context::sslv23_client)
-            , socket_(ioService, sslContext_)
+    BoostTcpSocket(boost::asio::io_service& ioService)
+            : socket_(ioService)
 
     {
-        socket_.set_verify_mode(boost::asio::ssl::verify_none);
     }
 
     template <class ITERATOR>
     void connect(ITERATOR& iterator)
     {
-        boost::asio::connect(socket_.lowest_layer(), iterator);
-        socket_.lowest_layer().set_option(boost::asio::ip::tcp::no_delay(true));
-        socket_.lowest_layer().set_option(boost::asio::socket_base::keep_alive(true));
-        socket_.handshake(boost::asio::ssl::stream_base::client);
+        boost::asio::connect(socket_, iterator);
+        socket_.set_option(boost::asio::ip::tcp::no_delay(true));
+        socket_.set_option(boost::asio::socket_base::keep_alive(true));
     }
 
     SocketType& get()
@@ -54,13 +50,12 @@ public:
     }
 
 private:
-    boost::asio::ssl::context sslContext_;
     SocketType socket_;
 };
 
-Connection::Ptr establishBoostTlsConnection(const ConnectionListener::Ptr& listener,
+Connection::Ptr establishBoostTcpConnection(const ConnectionListener::Ptr& listener,
                                             const std::string& host, uint16_t port)
 {
-    //return std::make_shared<BoostTlsConnection>(listener, host, port);
-    return std::make_shared<BoostConnection<BoostTlsSocket> >(listener, host, port);
+    //return std::make_shared<BoostTcpConnection>(listener, host, port);
+    return std::make_shared<BoostConnection<BoostTcpSocket> >(listener, host, port);
 }
