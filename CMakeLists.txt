@@ -10,11 +10,20 @@ option(WITH_AEON      "CryptoNight-Lite support" ON)
 option(WITH_HTTPD     "HTTP REST API" OFF)
 option(WITH_CC_CLIENT "CC Client" ON)
 option(WITH_CC_SERVER "CC Server" ON)
+option(LINK_STATIC_LIBS "Links to static version of external libraries" ON)
 
 include (CheckIncludeFile)
 include (cmake/cpu.cmake)
 
-find_package(OpenSSL)
+if (LINK_STATIC_LIBS)
+    set(LIBUV_USE_STATIC TRUE)
+    set(OPENSSL_USE_STATIC_LIBS TRUE)
+    set(Boost_USE_STATIC_LIBS ON)
+endif (LINK_STATIC_LIBS)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
+find_package(LibUV REQUIRED)
+find_package(OpenSSL REQUIRED)
 find_package(Boost COMPONENTS system REQUIRED)
 
 if (WIN32)
@@ -58,10 +67,6 @@ add_definitions(/D__STDC_FORMAT_MACROS)
 add_definitions(/DUNICODE)
 #add_definitions(/DAPP_DEBUG)
 add_definitions(-fexceptions)
-
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
-
-find_package(UV REQUIRED)
 
 include(cmake/flags.cmake)
 
@@ -199,7 +204,8 @@ target_link_libraries(xmrigMiner
         Boost::system
         OpenSSL::SSL
         OpenSSL::Crypto
-        ${UV_LIBRARIES}
+        ${CMAKE_DL_LIBS}
+        ${LIBUV_LIBRARIES}
         ${MHD_LIBRARY}
         ${EXTRA_LIBS}
         ${CPUID_LIB})
@@ -218,7 +224,7 @@ if (WITH_CC_SERVER AND MHD_FOUND)
             xmrig_os_dependencies
             xmrig_cpuid
             xmrig_cc_common
-            ${UV_LIBRARIES}
+            ${LIBUV_LIBRARIES}
             ${MHD_LIBRARY}
             ${EXTRA_LIBS}
             ${CPUID_LIB})
