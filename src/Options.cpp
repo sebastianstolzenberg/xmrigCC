@@ -292,19 +292,6 @@ Options::Options(int argc, char **argv) :
     m_daemonized(false),
     m_ccUseTls(false),
     m_configFile(Platform::defaultConfigName()),
-    m_apiToken(nullptr),
-    m_apiWorkerId(nullptr),
-    m_logFile(nullptr),
-    m_userAgent(nullptr),
-    m_ccHost(nullptr),
-    m_ccToken(nullptr),
-    m_ccWorkerId(nullptr),
-    m_ccAdminUser(nullptr),
-    m_ccAdminPass(nullptr),
-    m_ccClientConfigFolder(nullptr),
-    m_ccCustomDashboard(nullptr),
-    m_ccKeyFile(nullptr),
-    m_ccCertFile(nullptr),
     m_algo(ALGO_CRYPTONIGHT),
     m_algoVariant(AV0_AUTO),
     m_aesni(AESNI_AUTO),
@@ -323,7 +310,7 @@ Options::Options(int argc, char **argv) :
     m_affinity(-1L),
     m_multiHashThreadMask(-1L)
 {
-    m_pools.push_back(new Url());
+    m_pools.push_back(std::make_shared<Url>());
 
     int key;
 
@@ -364,7 +351,7 @@ Options::Options(int argc, char **argv) :
         parseConfig(Platform::defaultConfigName());
     }
 
-    if (!m_pools[0]->isValid() && (!m_ccHost || m_ccPort == 0)) {
+    if (!m_pools[0]->isValid() && (m_ccHost.empty() || m_ccPort == 0)) {
         fprintf(stderr, "Neither pool nor CCServer URL supplied. Exiting.\n");
         return;
     }
@@ -372,7 +359,7 @@ Options::Options(int argc, char **argv) :
 
     optimizeAlgorithmConfiguration();
 
-    for (Url *url : m_pools) {
+    for (auto& url : m_pools) {
         url->applyExceptions();
     }
 
@@ -425,12 +412,9 @@ bool Options::parseArg(int key, const char *arg)
 
     case 'o': /* --url */
         if (m_pools.size() > 1 || m_pools[0]->isValid()) {
-            auto url = new Url(arg);
+            auto url = std::make_shared<Url>(arg);
             if (url->isValid()) {
                 m_pools.push_back(url);
-            }
-            else {
-                delete url;
             }
         }
         else {
@@ -457,62 +441,51 @@ bool Options::parseArg(int key, const char *arg)
         break;
 
     case 'l': /* --log-file */
-        free(m_logFile);
-        m_logFile = strdup(arg);
+        m_logFile = arg;
         m_colors = false;
         break;
 
     case 4001: /* --access-token */
-        free(m_apiToken);
-        m_apiToken = strdup(arg);
+        m_apiToken = arg;
         break;
 
     case 4002: /* --worker-id */
-        free(m_apiWorkerId);
-        m_apiWorkerId = strdup(arg);
+        m_apiWorkerId = arg;
         break;
 
     case 4003: /* --cc-url */
         return parseCCUrl(arg);
 
     case 4004: /* --cc-access-token */
-        free(m_ccToken);
-        m_ccToken = strdup(arg);
+        m_ccToken = arg;
         break;
 
     case 4005: /* --cc-worker-id */
-        free(m_ccWorkerId);
-        m_ccWorkerId = strdup(arg);
+        m_ccWorkerId = arg;
         break;
 
     case 4007: /* --cc-user */
-        free(m_ccAdminUser);
-        m_ccAdminUser = strdup(arg);
+        m_ccAdminUser = arg;
         break;
 
     case 4008: /* --cc-pass */
-        free(m_ccAdminPass);
-        m_ccAdminPass = strdup(arg);
+        m_ccAdminPass = arg;
         break;
 
     case 4009: /* --cc-client-config-folder */
-        free(m_ccClientConfigFolder);
-        m_ccClientConfigFolder = strdup(arg);
+        m_ccClientConfigFolder = arg;
         break;
 
     case 4010: /* --cc-custom-dashboard */
-        free(m_ccCustomDashboard);
-        m_ccCustomDashboard = strdup(arg);
+        m_ccCustomDashboard = arg;
         break;
 
     case 4014: /* --cc-cert-file */
-        free(m_ccCertFile);
-            m_ccCertFile = strdup(arg);
+        m_ccCertFile = arg;
         break;
 
     case 4015: /* --cc-key-file */
-        free(m_ccKeyFile);
-            m_ccKeyFile = strdup(arg);
+        m_ccKeyFile = arg;
         break;
 
     case 4011: /* --daemonized */
@@ -581,8 +554,7 @@ bool Options::parseArg(int key, const char *arg)
     }
 
     case 1008: /* --user-agent */
-        free(m_userAgent);
-        m_userAgent = strdup(arg);
+        m_userAgent = arg;
         break;
 
     default:
@@ -982,17 +954,13 @@ void Options::optimizeAlgorithmConfiguration()
 
 bool Options::parseCCUrl(const char* url)
 {
-    free(m_ccHost);
-
     const char *port = strchr(url, ':');
     if (!port) {
-        m_ccHost = strdup(url);
+        m_ccHost = url;
         m_ccPort = kDefaultCCPort;
     } else {
         const size_t size = port++ - url + 1;
-        m_ccHost = static_cast<char*>(malloc(size));
-        memcpy(m_ccHost, url, size - 1);
-        m_ccHost[size - 1] = '\0';
+        m_ccHost.assign(url, size);
 
         m_ccPort = (uint16_t) strtol(port, nullptr, 10);
 

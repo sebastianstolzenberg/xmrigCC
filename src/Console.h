@@ -35,7 +35,7 @@ class Console
 {
 public:
     Console(IConsoleListener *listener);
-    ~Console();
+    ~Console() = default;
 
 private:
     static void onAllocBuffer(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf);

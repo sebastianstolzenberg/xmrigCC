@@ -183,6 +183,6 @@ void MultiWorker::save(const Job &job)
     }
 }
 
-Worker* createMultiWorker(size_t numHashes, Handle *handle) {
-    return new MultiWorker(handle, numHashes);
+std::shared_ptr<Worker> createMultiWorker(size_t numHashes, Handle *handle) {
+    return std::make_shared<MultiWorker>(handle, numHashes);
 }

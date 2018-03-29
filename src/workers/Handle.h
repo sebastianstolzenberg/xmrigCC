@@ -26,6 +26,7 @@
 
 
 #include <stdint.h>
+#include <memory>
 #include <uv.h>
 
 
@@ -43,15 +44,15 @@ public:
     inline int threadId() const            { return m_threadId; }
     inline int threads() const             { return m_threads; }
     inline int64_t affinity() const        { return m_affinity; }
-    inline IWorker *worker() const         { return m_worker; }
-    inline void setWorker(IWorker *worker) { m_worker = worker; }
+    inline IWorker *worker() const         { return m_worker.get(); }
+    inline void setWorker(const std::shared_ptr<IWorker>& worker) { m_worker = worker; }
 
 private:
     int m_priority;
     int m_threadId;
     int m_threads;
     int64_t m_affinity;
-    IWorker *m_worker;
+    std::shared_ptr<IWorker> m_worker;
     uv_thread_t m_thread;
 };
 

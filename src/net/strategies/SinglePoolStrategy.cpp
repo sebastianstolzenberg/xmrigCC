@@ -30,23 +30,23 @@
 
 SinglePoolStrategy::SinglePoolStrategy(const Url *url, const char *agent, IStrategyListener *listener) :
     m_active(false),
+    m_client(0, agent, this),
     m_listener(listener)
 {
-    m_client = new Client(0, agent, this);
-    m_client->setUrl(url);
-    m_client->setRetryPause(Options::i()->retryPause() * 1000);
+    m_client.setUrl(url);
+    m_client.setRetryPause(Options::i()->retryPause() * 1000);
 }
 
 
 int64_t SinglePoolStrategy::submit(const JobResult &result)
 {
-    return m_client->submit(result);
+    return m_client.submit(result);
 }
 
 
 void SinglePoolStrategy::connect()
 {
-    m_client->connect();
+    m_client.connect();
 }
 
 
@@ -56,19 +56,19 @@ void SinglePoolStrategy::resume()
         return;
     }
 
-    m_listener->onJob(m_client, m_client->job());
+    m_listener->onJob(&m_client, m_client.job());
 }
 
 
 void SinglePoolStrategy::stop()
 {
-    m_client->disconnect();
+    m_client.disconnect();
 }
 
 
 void SinglePoolStrategy::tick(uint64_t now)
 {
-    m_client->tick(now);
+    m_client.tick(now);
 }
 
 

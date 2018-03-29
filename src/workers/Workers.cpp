@@ -44,7 +44,7 @@ Job Workers::m_job;
 std::atomic<int> Workers::m_paused;
 std::atomic<uint64_t> Workers::m_sequence;
 std::list<JobResult> Workers::m_queue;
-std::vector<Handle*> Workers::m_workers;
+std::vector<std::shared_ptr<Handle> > Workers::m_workers;
 uint64_t Workers::m_ticks = 0;
 uv_async_t Workers::m_async;
 uv_mutex_t Workers::m_mutex;
@@ -116,7 +116,7 @@ void Workers::start(int64_t affinity, int priority)
     uv_timer_start(&m_timer, Workers::onTick, 500, 500);
 
     for (int i = 0; i < threads; ++i) {
-        auto handle = new Handle(i, threads, affinity, priority);
+        auto handle = std::make_shared<Handle>(i, threads, affinity, priority);
         m_workers.push_back(handle);
         handle->start(Workers::onReady);
     }

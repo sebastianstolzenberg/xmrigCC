@@ -1,4 +1,4 @@
-
+#include <stdlib.h>
 #include <assert.h>
 #include <uv.h>
 #include "net.h"
@@ -72,8 +72,18 @@ net_close(net_t * net, void (*cb)(uv_handle_t*)) {
 int
 net_free(net_t * net) {
   net_close(net, NULL);
-  free(net->resolver);
-  free(net);
+  if (net->conn != NULL) {
+    free(net->conn);
+    net->conn = NULL;
+  }
+  if (net->resolver != NULL) {
+    free(net->resolver);
+    net->resolver = NULL;
+  }
+  if (net != NULL) {
+    free(net);
+    net = NULL;
+  }
   return NET_OK;
 }
 

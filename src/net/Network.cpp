@@ -54,21 +54,21 @@ Network::Network(const Options *options) :
 
     Workers::setListener(this);
 
-    const std::vector<Url*> &pools = options->pools();
+    const std::vector<std::shared_ptr<Url> > &pools = options->pools();
 
 #ifndef XMRIG_NO_TLS
     ssl_init();
 #endif
 
     if (pools.size() > 1) {
-        m_strategy = new FailoverStrategy(pools, Platform::userAgent(), this);
+        m_strategy = std::make_shared<FailoverStrategy>(pools, Platform::userAgent(), this);
     }
     else {
-        m_strategy = new SinglePoolStrategy(pools.front(), Platform::userAgent(), this);
+        m_strategy = std::make_shared<SinglePoolStrategy>(pools.front().get(), Platform::userAgent(), this);
     }
 
     if (m_options->donateLevel() > 0) {
-        m_donate = new DonateStrategy(Platform::userAgent(), this);
+        m_donate = std::make_shared<DonateStrategy>(Platform::userAgent(), this);
     }
 
     m_timer.data = this;
@@ -137,7 +137,7 @@ void Network::onJobResult(const JobResult &result)
 
 void Network::onPause(IStrategy *strategy)
 {
-    if (m_donate && m_donate == strategy) {
+    if (m_donate && m_donate.get() == strategy) {
         LOG_NOTICE("dev donate finished");
         m_strategy->resume();
     }

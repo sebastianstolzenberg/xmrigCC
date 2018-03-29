@@ -28,13 +28,13 @@
 #include "Options.h"
 
 
-FailoverStrategy::FailoverStrategy(const std::vector<Url*> &urls, const char *agent, IStrategyListener *listener) :
+FailoverStrategy::FailoverStrategy(const std::vector<std::shared_ptr<Url> > &urls, const char *agent, IStrategyListener *listener) :
     m_active(-1),
     m_index(0),
     m_listener(listener)
 {
-    for (const Url *url : urls) {
-        add(url, agent);
+    for (auto& url : urls) {
+        add(url.get(), agent);
     }
 }
 

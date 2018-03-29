@@ -41,6 +41,7 @@ static inline int random(int min, int max) {
 
 DonateStrategy::DonateStrategy(const char *agent, IStrategyListener *listener) :
     m_active(false),
+    m_client(std::make_shared<Client>(-1, agent, this)),
     m_donateTime(Options::i()->donateLevel() * 60 * 1000),
     m_idleTime((100 - Options::i()->donateLevel()) * 60 * 1000),
     m_listener(listener)
@@ -58,7 +59,6 @@ DonateStrategy::DonateStrategy(const char *agent, IStrategyListener *listener) :
     Url *url = new Url("donate2.graef.in", Options::i()->algo() == Options::ALGO_CRYPTONIGHT_LITE ? 8080 : 80, userId, nullptr, false, false, true);
 #endif
 
-    m_client = new Client(-1, agent, this);
     m_client->setUrl(url);
     m_client->setRetryPause(Options::i()->retryPause() * 1000);
     m_client->setQuiet(true);

@@ -31,6 +31,8 @@
 
 #include <cstdint>
 #include <vector>
+#include <string>
+#include <memory>
 
 #include "rapidjson/fwd.h"
 
@@ -77,20 +79,20 @@ public:
     inline bool daemonized() const                  { return m_daemonized; }
     inline bool ccUseTls() const                    { return m_ccUseTls; }
     inline const char *configFile() const           { return m_configFile; }
-    inline const char *apiToken() const             { return m_apiToken; }
-    inline const char *apiWorkerId() const          { return m_apiWorkerId; }
-    inline const char *logFile() const              { return m_logFile; }
-    inline const char *userAgent() const            { return m_userAgent; }
-    inline const char *ccHost() const               { return m_ccHost; }
-    inline const char *ccToken() const              { return m_ccToken; }
-    inline const char *ccWorkerId() const           { return m_ccWorkerId; }
-    inline const char *ccAdminUser() const          { return m_ccAdminUser; }
-    inline const char *ccAdminPass() const          { return m_ccAdminPass; }
-    inline const char *ccClientConfigFolder() const { return m_ccClientConfigFolder; }
-    inline const char *ccCustomDashboard() const    { return m_ccCustomDashboard == nullptr ? "index.html" : m_ccCustomDashboard; }
-    inline const char *ccKeyFile() const            { return m_ccKeyFile == nullptr ? "server.key" : m_ccKeyFile; }
-    inline const char *ccCertFile() const           { return m_ccCertFile == nullptr ? "server.pem" : m_ccCertFile; }
-    inline const std::vector<Url*> &pools() const   { return m_pools; }
+    inline const char *apiToken() const             { return m_apiToken.c_str(); }
+    inline const char *apiWorkerId() const          { return m_apiWorkerId.c_str(); }
+    inline const char *logFile() const              { return m_logFile.c_str(); }
+    inline const char *userAgent() const            { return m_userAgent.c_str(); }
+    inline const char *ccHost() const               { return m_ccHost.c_str(); }
+    inline const char *ccToken() const              { return m_ccToken.c_str(); }
+    inline const char *ccWorkerId() const           { return m_ccWorkerId.c_str(); }
+    inline const char *ccAdminUser() const          { return m_ccAdminUser.c_str(); }
+    inline const char *ccAdminPass() const          { return m_ccAdminPass.c_str(); }
+    inline const char *ccClientConfigFolder() const { return m_ccClientConfigFolder.c_str(); }
+    inline const char *ccCustomDashboard() const    { return m_ccCustomDashboard.empty() ? "index.html" : m_ccCustomDashboard.c_str(); }
+    inline const char *ccKeyFile() const            { return m_ccKeyFile.empty() ? "server.key" : m_ccKeyFile.c_str(); }
+    inline const char *ccCertFile() const           { return m_ccCertFile.empty() ? "server.pem" : m_ccCertFile.c_str(); }
+    inline const std::vector<std::shared_ptr<Url>> &pools() const   { return m_pools; }
     inline Algo algo() const                        { return m_algo; }
     inline PowVersion forcePowVersion() const       { return m_forcePowVersion; }
     inline bool aesni() const                       { return m_aesni == AESNI_ON; }
@@ -148,19 +150,19 @@ private:
     bool m_daemonized;
     bool m_ccUseTls;
     const char* m_configFile;
-    char *m_apiToken;
-    char *m_apiWorkerId;
-    char *m_logFile;
-    char *m_userAgent;
-    char *m_ccHost;
-    char *m_ccToken;
-    char *m_ccWorkerId;
-    char *m_ccAdminUser;
-    char *m_ccAdminPass;
-    char *m_ccClientConfigFolder;
-    char *m_ccCustomDashboard;
-    char *m_ccKeyFile;
-    char *m_ccCertFile;
+    std::string m_apiToken;
+    std::string m_apiWorkerId;
+    std::string m_logFile;
+    std::string m_userAgent;
+    std::string m_ccHost;
+    std::string m_ccToken;
+    std::string m_ccWorkerId;
+    std::string m_ccAdminUser;
+    std::string m_ccAdminPass;
+    std::string m_ccClientConfigFolder;
+    std::string m_ccCustomDashboard;
+    std::string m_ccKeyFile;
+    std::string m_ccCertFile;
     Algo m_algo;
     AlgoVariant m_algoVariant;
     AesNi m_aesni;
@@ -178,7 +180,7 @@ private:
     int m_ccPort;
     int64_t m_affinity;
     int64_t m_multiHashThreadMask;
-    std::vector<Url*> m_pools;
+    std::vector<std::shared_ptr<Url> > m_pools;
 };
 
 #endif /* __OPTIONS_H__ */

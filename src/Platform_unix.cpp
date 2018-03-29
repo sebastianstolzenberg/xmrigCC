@@ -24,6 +24,7 @@
 #include <sched.h>
 #include <cstring>
 #include <string>
+#include <sstream>
 #include <sys/resource.h>
 #include <uv.h>
 
@@ -36,41 +37,42 @@
 #endif
 
 
-static inline char *createUserAgent()
+static std::string createUserAgent()
 {
-    const size_t max = 160;
-
-    char *buf = new char[max];
-    int length = snprintf(buf, max, "%s/%s (Linux ", APP_NAME, APP_VERSION);
+    std::ostringstream buf;
+    buf << APP_NAME "/" APP_VERSION " (Linux ";
+//    int length = snprintf(buf, max, "%s/%s (Linux ", APP_NAME, APP_VERSION);
 
 #   if defined(__x86_64__)
-    length += snprintf(buf + length, max - length, "x86_64) libuv/%s", uv_version_string());
+    buf << "x86_64) libuv/";
 #   else
-    length += snprintf(buf + length, max - length, "i686) libuv/%s", uv_version_string());
+    buf << "i686) libuv/";
 #   endif
+    buf  << uv_version_string();
 
 #   ifdef XMRIG_NVIDIA_PROJECT
     const int cudaVersion = cuda_get_runtime_version();
-    length += snprintf(buf + length, max - length, " CUDA/%d.%d", cudaVersion / 1000, cudaVersion % 100);
+    buf << " CUDA/" << cudaVersion / 1000 << "." << cudaVersion % 100;
+//    length += snprintf(buf + length, max - length, " CUDA/%d.%d", cudaVersion / 1000, cudaVersion % 100);
 #   endif
 
 #   ifdef __GNUC__
-    length += snprintf(buf + length, max - length, " gcc/%d.%d.%d", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
+    buf << "gcc/" << __GNUC__ << "." << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__;
+//    length += snprintf(buf + length, max - length, " gcc/%d.%d.%d", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
 #   endif
 
-    return buf;
+    return buf.str();
 }
 
 
 void Platform::init(const char *userAgent)
 {
-    m_userAgent = userAgent ? strdup(userAgent) : createUserAgent();
+    m_userAgent = userAgent ? userAgent : createUserAgent();
 }
 
 
 void Platform::release()
 {
-    delete [] m_userAgent;
 }
 
 

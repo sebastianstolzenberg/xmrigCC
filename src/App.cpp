@@ -79,7 +79,7 @@ App::App(int argc, char **argv) :
     if (!m_options->background()) {
 #   endif
         Log::add(new ConsoleLog(m_options->colors()));
-        m_console = new Console(this);
+        m_console = std::make_shared<Console>(this);
 #   ifdef WIN32
     }
 #   endif
@@ -97,7 +97,7 @@ App::App(int argc, char **argv) :
     Platform::init(m_options->userAgent());
     Platform::setProcessPriority(m_options->priority());
 
-    m_network = new Network(m_options);
+    m_network = std::make_shared<Network>(m_options);
 
     uv_signal_init(uv_default_loop(), &m_sigHUP);
     uv_signal_init(uv_default_loop(), &m_sigINT);
@@ -106,8 +106,6 @@ App::App(int argc, char **argv) :
 
 App::~App()
 {
-    delete m_network;
-
     Options::release();
     Mem::release();
     Platform::release();

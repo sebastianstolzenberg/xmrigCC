@@ -40,7 +40,7 @@ class Url;
 class FailoverStrategy : public IStrategy, public IClientListener
 {
 public:
-    FailoverStrategy(const std::vector<Url*> &urls, const char *agent, IStrategyListener *listener);
+    FailoverStrategy(const std::vector<std::shared_ptr<Url> > &urls, const char *agent, IStrategyListener *listener);
 
 public:
     inline bool isActive() const override  { return m_active >= 0; }

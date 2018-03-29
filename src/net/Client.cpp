@@ -77,9 +77,6 @@ Client::Client(int id, const char *agent, IClientListener *listener) :
 
 Client::~Client()
 {
-    if (m_net) {
-        net_free(m_net);
-    }
 }
 
 
@@ -280,7 +277,7 @@ int64_t Client::send(size_t size)
         return -1;
     }
 
-    if (net_write2(m_net, m_sendBuf, static_cast<unsigned int>(size)) < 0) {
+    if (net_write2(m_net.get(), m_sendBuf, static_cast<unsigned int>(size)) < 0) {
         close();
         return -1;
     }
@@ -297,9 +294,7 @@ void Client::close()
     if (m_net) {
         auto client = getClient(m_net->data);
 
-        net_free(m_net);
-
-        m_net = nullptr;
+        m_net.reset();
 
         client->reconnect();
     }
@@ -310,7 +305,7 @@ void Client::connect()
 {
     LOG_DEBUG("Client::connect");
 
-    m_net = net_new(const_cast<char *>(m_url.host()), m_url.port());
+    m_net = std::shared_ptr<net_t>(net_new(const_cast<char *>(m_url.host()), m_url.port()), net_free);
     m_net->data = this;
     m_net->conn_cb = Client::onConnect;
     m_net->read_cb = Client::onRead;
@@ -319,11 +314,11 @@ void Client::connect()
 #ifndef XMRIG_NO_TLS
     if (m_url.useTls()) {
         tls_ctx* tls_ctx = tls_ctx_new();
-        net_set_tls(m_net, tls_ctx);
+        net_set_tls(m_net.get(), tls_ctx);
     }
 #endif
 
-    net_connect(m_net);
+    net_connect(m_net.get());
 }
 
 void Client::onRead(net_t *net, size_t size, char *buf)

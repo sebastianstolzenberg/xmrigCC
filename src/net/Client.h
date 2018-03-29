@@ -118,7 +118,7 @@ private:
     Url m_url;
     uv_buf_t m_recvBuf;
 
-    net_t* m_net;
+    std::shared_ptr<net_t> m_net;
 
 #   ifndef XMRIG_PROXY_PROJECT
     uv_timer_t m_keepAliveTimer;

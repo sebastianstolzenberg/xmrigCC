@@ -24,7 +24,7 @@
 #ifndef __APP_H__
 #define __APP_H__
 
-
+#include <memory>
 #include <uv.h>
 
 
@@ -62,9 +62,9 @@ private:
 
   bool m_restart;
 
-  Console *m_console;
+  std::shared_ptr<Console> m_console;
   Httpd *m_httpd;
-  Network *m_network;
+  std::shared_ptr<Network> m_network;
   Options *m_options;
   uv_signal_t m_sigHUP;
   uv_signal_t m_sigINT;

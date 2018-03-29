@@ -26,6 +26,7 @@
 #define __MULTIWORKER_H__
 
 
+#include <memory>
 #include "net/Job.h"
 #include "net/JobResult.h"
 #include "workers/Worker.h"
@@ -33,7 +34,7 @@
 
 class Handle;
 
-Worker* createMultiWorker(size_t numHashes, Handle *handle);
+std::shared_ptr<Worker> createMultiWorker(size_t numHashes, Handle *handle);
 
 
 #endif /* __SINGLEWORKER_H__ */

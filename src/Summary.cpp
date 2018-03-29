@@ -144,7 +144,7 @@ static void print_threads()
 
 static void print_pools()
 {
-    const std::vector<Url*> &pools = Options::i()->pools();
+    const std::vector<std::shared_ptr<Url> > &pools = Options::i()->pools();
 
     for (size_t i = 0; i < pools.size(); ++i) {
        Log::i()->text(Options::i()->colors() ? "\x1B[01;32m * \x1B[01;37mPOOL #%d:      \x1B[01;36m%s:%d %s" : " * POOL #%d:      %s:%d %s",

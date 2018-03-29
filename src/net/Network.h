@@ -25,6 +25,7 @@
 #define __NETWORK_H__
 
 
+#include <memory>
 #include <vector>
 #include <uv.h>
 
@@ -64,8 +65,8 @@ private:
   static void onTick(uv_timer_t *handle);
 
   const Options *m_options;
-  IStrategy *m_donate;
-  IStrategy *m_strategy;
+  std::shared_ptr<IStrategy> m_donate;
+  std::shared_ptr<IStrategy> m_strategy;
   NetworkState m_state;
   uv_timer_t m_timer;
 };
