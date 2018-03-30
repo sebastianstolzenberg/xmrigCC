@@ -28,7 +28,7 @@
 #include "Options.h"
 
 
-FailoverStrategy::FailoverStrategy(const std::vector<std::shared_ptr<Url> > &urls, const char *agent, IStrategyListener *listener) :
+FailoverStrategy::FailoverStrategy(const std::vector<std::shared_ptr<Url> > &urls, const std::string& agent, IStrategyListener *listener) :
     m_active(-1),
     m_index(0),
     m_listener(listener)
@@ -138,7 +138,7 @@ void FailoverStrategy::onResultAccepted(Client *client, const SubmitResult &resu
 }
 
 
-void FailoverStrategy::add(const Url *url, const char *agent)
+void FailoverStrategy::add(const Url *url, const std::string& agent)
 {
     Client *client = new Client((int) m_pools.size(), agent, this);
     client->setUrl(url);

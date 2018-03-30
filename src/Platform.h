@@ -30,12 +30,12 @@ class Platform
 {
 public:
     static const char *defaultConfigName();
-    static void init(const char *userAgent);
+    static void init(const std::string& userAgent);
     static void release();
     static void setProcessPriority(int priority);
     static void setThreadPriority(int priority);
 
-    static inline const char *userAgent() { return m_userAgent.c_str(); }
+    static inline const std::string& userAgent() { return m_userAgent; }
 
 private:
     static char m_defaultConfigName[520];

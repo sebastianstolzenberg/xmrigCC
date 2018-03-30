@@ -37,7 +37,7 @@ class Url;
 class SinglePoolStrategy : public IStrategy, public IClientListener
 {
 public:
-    SinglePoolStrategy(const Url *url, const char *agent, IStrategyListener *listener);
+    SinglePoolStrategy(const Url *url, const std::string& agent, IStrategyListener *listener);
 
 public:
     inline bool isActive() const override  { return m_active; }

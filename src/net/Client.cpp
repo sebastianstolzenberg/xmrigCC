@@ -53,7 +53,7 @@
 int64_t Client::m_sequence = 1;
 
 
-Client::Client(int id, const char *agent, IClientListener *listener) :
+Client::Client(int id, const std::string& agent, IClientListener *listener) :
     m_quiet(false),
     m_nicehash(false),
     m_agent(agent),
@@ -401,7 +401,7 @@ void Client::login()
     rapidjson::Value params(rapidjson::kObjectType);
     params.AddMember("login", rapidjson::StringRef(m_url.user()),     allocator);
     params.AddMember("pass",  rapidjson::StringRef(m_url.password()), allocator);
-    params.AddMember("agent", rapidjson::StringRef(m_agent),          allocator);
+    params.AddMember("agent", rapidjson::StringRef(m_agent.c_str()),  allocator);
 
     doc.AddMember("params", params, allocator);
 

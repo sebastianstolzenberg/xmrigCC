@@ -65,9 +65,9 @@ static std::string createUserAgent()
 }
 
 
-void Platform::init(const char *userAgent)
+void Platform::init(const std::string& userAgent)
 {
-    m_userAgent = userAgent ? userAgent : createUserAgent();
+    m_userAgent = userAgent.empty() ? createUserAgent() : userAgent;
 }
 
 

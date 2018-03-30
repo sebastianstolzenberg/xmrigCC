@@ -61,7 +61,7 @@ public:
     constexpr static int kResponseTimeout  = 20 * 1000;
     constexpr static int kKeepAliveTimeout = 60 * 1000;
 
-    Client(int id, const char *agent, IClientListener *listener);
+    Client(int id, const std::string& agent, IClientListener *listener);
     ~Client();
 
     int64_t submit(const JobResult &result);
@@ -104,7 +104,7 @@ private:
     char m_buf[2048];
     char m_rpcId[64];
     char m_sendBuf[768];
-    const char *m_agent;
+    std::string m_agent;
     IClientListener *m_listener;
     int m_id;
     int m_retryPause;

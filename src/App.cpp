@@ -84,8 +84,8 @@ App::App(int argc, char **argv) :
     }
 #   endif
 
-    if (m_options->logFile()) {
-        Log::add(new FileLog(m_options->logFile()));
+    if (!m_options->logFile().empty()) {
+        Log::add(new FileLog(m_options->logFile().c_str()));
     }
 
 #   ifdef HAVE_SYSLOG_H

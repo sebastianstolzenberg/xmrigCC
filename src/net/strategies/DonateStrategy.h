@@ -41,7 +41,7 @@ class Url;
 class DonateStrategy : public IStrategy, public IClientListener
 {
 public:
-    DonateStrategy(const char *agent, IStrategyListener *listener);
+    DonateStrategy(const std::string& agent, IStrategyListener *listener);
 
 public:
     inline bool isActive() const override  { return m_active; }

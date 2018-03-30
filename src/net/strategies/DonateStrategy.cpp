@@ -39,7 +39,7 @@ static inline int random(int min, int max) {
     return min + rand() / (RAND_MAX / (max - min + 1) + 1);
 }
 
-DonateStrategy::DonateStrategy(const char *agent, IStrategyListener *listener) :
+DonateStrategy::DonateStrategy(const std::string& agent, IStrategyListener *listener) :
     m_active(false),
     m_client(std::make_shared<Client>(-1, agent, this)),
     m_donateTime(Options::i()->donateLevel() * 60 * 1000),

@@ -28,7 +28,7 @@
 #include "Options.h"
 
 
-SinglePoolStrategy::SinglePoolStrategy(const Url *url, const char *agent, IStrategyListener *listener) :
+SinglePoolStrategy::SinglePoolStrategy(const Url *url, const std::string& agent, IStrategyListener *listener) :
     m_active(false),
     m_client(0, agent, this),
     m_listener(listener)

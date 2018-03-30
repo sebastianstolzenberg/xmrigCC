@@ -69,8 +69,8 @@ ApiState::ApiState()
     memset(m_totalHashrate, 0, sizeof(m_totalHashrate));
     memset(m_workerId, 0, sizeof(m_workerId));
 
-    if (Options::i()->apiWorkerId()) {
-        strncpy(m_workerId, Options::i()->apiWorkerId(), sizeof(m_workerId) - 1);
+    if (!Options::i()->apiWorkerId().empty()) {
+        strncpy(m_workerId, Options::i()->apiWorkerId().c_str(), sizeof(m_workerId) - 1);
     }
     else {
         gethostname(m_workerId, sizeof(m_workerId) - 1);
@@ -228,7 +228,7 @@ void ApiState::getMiner(rapidjson::Document &doc) const
 
     doc.AddMember("version",      APP_VERSION, allocator);
     doc.AddMember("kind",         APP_KIND, allocator);
-    doc.AddMember("ua",           rapidjson::StringRef(Platform::userAgent()), allocator);
+    doc.AddMember("ua",           rapidjson::StringRef(Platform::userAgent().c_str()), allocator);
     doc.AddMember("cpu",          cpu, allocator);
     doc.AddMember("algo",         rapidjson::StringRef(Options::i()->algoName()), allocator);
     doc.AddMember("hugepages",    Mem::isHugepagesEnabled(), allocator);
