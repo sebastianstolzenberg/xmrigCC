@@ -40,6 +40,7 @@
 uv_mutex_t Service::m_mutex;
 std::map<std::string, ControlCommand> Service::m_clientCommand;
 std::map<std::string, ClientStatus> Service::m_clientStatus;
+std::map<std::string, ClientStatus> Service::m_proxyStatus;
 int Service::m_currentServerTime = 0;
 
 bool Service::start()
@@ -55,6 +56,7 @@ void Service::release()
 
     m_clientCommand.clear();
     m_clientStatus.clear();
+    m_proxyStatus.clear();
 
     uv_mutex_unlock(&m_mutex);
 }
@@ -101,6 +103,8 @@ unsigned Service::handlePOST(const Options* options, const std::string& url, con
 
     if (url.rfind("/client/setClientStatus", 0) == 0) {
         resultCode = setClientStatus(clientIp, clientId, data, resp);
+    } else if (url.rfind("/client/setProxyStatus", 0) == 0) {
+        resultCode = setProxyStatus(clientIp, clientId, data, resp);
     } else if (url.rfind("/admin/setClientConfig", 0) == 0 || url.rfind("/client/setClientConfig", 0) == 0) {
         resultCode = setClientConfig(options, clientId, data, resp);
     } else if (url.rfind("/admin/setClientCommand", 0) == 0) {
@@ -197,12 +201,20 @@ unsigned Service::getClientStatusList(std::string& resp)
         clientStatusList.PushBack(clientStatusEntry, allocator);
     }
 
+    rapidjson::Value proxyStatusList(rapidjson::kArrayType);
+    for (auto& proxyStatus : m_proxyStatus) {
+        rapidjson::Value proxyStatusEntry(rapidjson::kObjectType);
+        proxyStatusEntry.AddMember("proxy_status", proxyStatus.second.toJson(allocator), allocator);
+        proxyStatusList.PushBack(proxyStatusEntry, allocator);
+    }
+
     auto time_point = std::chrono::system_clock::now();
     m_currentServerTime = std::chrono::system_clock::to_time_t(time_point);
 
     document.AddMember("current_server_time", m_currentServerTime, allocator);
     document.AddMember("current_version", rapidjson::StringRef(Version::string().c_str()), allocator);
     document.AddMember("client_status_list", clientStatusList, allocator);
+    document.AddMember("proxy_status_list", proxyStatusList, allocator);
 
     rapidjson::StringBuffer buffer(0, 4096);
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
@@ -233,6 +245,28 @@ unsigned Service::setClientStatus(const std::string& clientIp, const std::string
         if (m_clientCommand[clientId].isOneTimeCommand()) {
             m_clientCommand.erase(clientId);
         }
+    } else {
+        LOG_ERR("Parse Error Occured: %d", document.GetParseError());
+    }
+
+    return resultCode;
+}
+
+unsigned Service::setProxyStatus(const std::string& proxyIp, const std::string& proxyId, const std::string& data, std::string& resp)
+{
+    int resultCode = MHD_HTTP_BAD_REQUEST;
+
+    rapidjson::Document document;
+    if (!document.Parse(data.c_str()).HasParseError()) {
+        LOG_INFO("Status from client: %s", proxyId.c_str());
+
+        ClientStatus proxyStatus;
+        proxyStatus.parseFromJson(document);
+        proxyStatus.setExternalIp(proxyIp);
+
+        m_proxyStatus[proxyId] = proxyStatus;
+
+        resultCode = MHD_HTTP_OK;
     } else {
         LOG_ERR("Parse Error Occured: %d", document.GetParseError());
     }

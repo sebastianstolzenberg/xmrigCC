@@ -55,12 +55,15 @@ private:
     static unsigned setClientCommand(const std::string& clientId, const std::string& data, std::string& resp);
     static unsigned setClientConfig(const Options* options, const std::string &clientId, const std::string &data, std::string &resp);
 
+    static unsigned setProxyStatus(const std::string& proxyIp, const std::string& proxyId, const std::string& data, std::string& resp);
+
     static std::string getClientConfigFileName(const Options *options, const std::string &clientId);
 
 private:
     static int m_currentServerTime;
 
     static std::map<std::string, ClientStatus> m_clientStatus;
+    static std::map<std::string, ClientStatus> m_proxyStatus;
     static std::map<std::string, ControlCommand> m_clientCommand;
 
     static uv_mutex_t m_mutex;
