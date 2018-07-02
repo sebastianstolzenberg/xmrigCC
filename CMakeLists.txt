@@ -1,4 +1,15 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.0)
+
+option(HUNTER_ENABLED "Use hunter package manager for dependency resolution" OFF)
+
+include("cmake/HunterGate.cmake")
+set(HUNTER_STATUS_DEBUG OFF)
+set(HUNTER_TLS_VERIFY ON)
+HunterGate(
+        URL "https://github.com/ruslo/hunter/archive/v0.22.19.tar.gz"
+        SHA1 "54749ffc945f78362aa680a7abbafcaa40ff9069"
+)
+
 project(xmrig)
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -19,6 +30,13 @@ set(Boost_USE_STATIC_LIBS ON)
 
 include (CheckIncludeFile)
 include (cmake/cpu.cmake)
+
+hunter_add_package(Boost COMPONENTS system)
+hunter_add_package(libuv)
+if (WITH_TLS)
+    hunter_add_package(OpenSSL)
+endif()
+
 
 set(SOURCES
     src/api/NetworkState.cpp
@@ -119,12 +137,19 @@ add_compile_options(-fexceptions)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
-find_package(UV REQUIRED)
+if(HUNTER_ENABLED)
+    find_package(libuv CONFIG REQUIRED)
+    set(UV_LIBRARIES libuv::uv)
+else()
+    find_package(UV REQUIRED)
+endif()
 
 if (WIN32)
     add_definitions(-DBOOST_ALL_NO_LIB)
 endif()
-
+if (HUNTER_ENABLED)
+    set(Boost_NO_SYSTEM_PATHS ON)
+endif()
 find_package(Boost 1.63.0 COMPONENTS system REQUIRED)
 
 include(cmake/flags.cmake)
